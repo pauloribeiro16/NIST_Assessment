@@ -101,26 +101,28 @@ export default function RoadmapPage() {
     };
 
     return (
-        <div className="flex flex-col gap-8 max-w-5xl mx-auto h-full animated-fade-in pb-20">
-            <header className="border-b border-gray-200 dark:border-gray-800 pb-6 flex flex-col md:flex-row md:items-end justify-between gap-4">
-                <div>
-                    <h2 className="text-3xl font-bold tracking-tight mb-2 flex items-center gap-3">
-                        <Activity className="w-8 h-8 text-indigo-500" />
-                        Implementation Roadmap
+        <div className="flex flex-col gap-10 max-w-6xl mx-auto h-full px-4 pb-24 animate-in">
+            <header className="flex flex-col md:flex-row md:items-end justify-between gap-6 border-b border-white/5 pb-8">
+                <div className="flex flex-col gap-3">
+                    <h2 className="text-4xl font-display font-bold tracking-tight text-text-title flex items-center gap-4">
+                        <Activity className="w-10 h-10 text-nist-primary" />
+                        Implementation Strategy
                     </h2>
-                    <p className="text-gray-500 dark:text-gray-400 text-sm">A phased approach integrating the NIST CSF 2.0 functions into an actionable timeline, prioritized by your current assessment gaps.</p>
+                    <p className="text-text-dim text-sm max-w-2xl leading-relaxed italic border-l-2 border-nist-primary pl-4">
+                        A prioritized strategic timeline integrating NIST CSF 2.0 functional requirements into an actionable multi-phase deployment roadmap, synchronized with institutional resource allocation.
+                    </p>
                 </div>
 
-                <div className="flex gap-2">
+                <div className="flex gap-3">
                     <button
                         onClick={expandAll}
-                        className="px-4 py-2 rounded-xl bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 text-xs font-bold hover:bg-indigo-100 dark:hover:bg-indigo-900/50 transition-colors border border-indigo-100 dark:border-indigo-800"
+                        className="px-5 py-2.5 rounded-xl bg-nist-primary/10 text-nist-primary text-xs font-bold hover:bg-nist-primary/20 transition-all border border-nist-primary/20 uppercase tracking-widest"
                     >
                         Expand All
                     </button>
                     <button
                         onClick={collapseAll}
-                        className="px-4 py-2 rounded-xl bg-gray-50 dark:bg-gray-800 text-gray-600 dark:text-gray-400 text-xs font-bold hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors border border-gray-200 dark:border-gray-700"
+                        className="px-5 py-2.5 rounded-xl bg-white/5 text-text-dim text-xs font-bold hover:bg-white/10 transition-all border border-white/10 uppercase tracking-widest"
                     >
                         Collapse All
                     </button>
@@ -134,98 +136,105 @@ export default function RoadmapPage() {
 
                     return (
                         <div key={i}
-                            className={`card-pro transition-all duration-300 overflow-hidden ${isExpanded ? 'ring-1 ring-slate-200 dark:ring-slate-700' : 'hover:border-slate-300 dark:hover:border-slate-600'}`}
+                            className={`glass-pro transition-all duration-500 overflow-hidden relative group ${isExpanded ? 'border-nist-primary/40 shadow-[0_0_30px_rgba(99,102,241,0.1)]' : 'hover:border-white/10 hover:bg-white/5'}`}
                             style={{
-                                borderLeft: `4px solid ${item.color}`
+                                borderLeft: `6px solid ${item.color}`
                             }}>
+                            {isExpanded && <div className="absolute inset-0 bg-gradient-to-br from-nist-primary/5 to-transparent pointer-events-none" />}
 
                             <div
                                 onClick={() => toggleFunction(item.id)}
-                                className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-6 cursor-pointer hover:bg-white/50 dark:hover:bg-gray-800/50 transition-colors"
+                                className="flex flex-col md:flex-row md:items-center justify-between gap-6 p-8 cursor-pointer relative z-10"
                             >
-                                <div className="flex items-center gap-4">
-                                    <div className="w-10 h-10 rounded-xl flex items-center justify-center bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800 shadow-sm"
-                                        style={{ backgroundColor: `${item.color}10` }}>
-                                        <Icon className="w-5 h-5" style={{ color: item.color }} />
+                                <div className="flex items-center gap-6">
+                                    <div className="w-14 h-14 rounded-2xl flex items-center justify-center shadow-inner group-hover:scale-110 transition-transform"
+                                        style={{ backgroundColor: `${item.color}15`, border: `1px solid ${item.color}30` }}>
+                                        <Icon className="w-7 h-7" style={{ color: item.color }} />
                                     </div>
 
                                     <div>
-                                        <div className="flex items-center gap-2">
-                                            <h3 className="text-sm font-extrabold uppercase tracking-tight" style={{ color: item.textOverride }}>{item.phase}: {item.name}</h3>
-                                            {isExpanded ? <ChevronDown className="w-4 h-4 text-slate-400" /> : <ChevronRight className="w-4 h-4 text-slate-400" />}
+                                        <div className="flex items-center gap-3 mb-1">
+                                            <h3 className="text-lg font-display font-bold tracking-tight text-text-title">{item.id} Function</h3>
+                                            <span className="px-2 py-0.5 rounded-md bg-white/5 text-[9px] font-bold uppercase tracking-widest text-text-dim border border-white/10">{item.phase}</span>
+                                            {isExpanded ? <ChevronDown className="w-4 h-4 text-nist-primary" /> : <ChevronRight className="w-4 h-4 text-text-dim" />}
                                         </div>
-                                        <div className="text-[10px] text-slate-400 dark:text-slate-500 font-bold uppercase tracking-widest mt-0.5">
-                                            {item.duration}
+                                        <div className="text-[10px] text-text-dim font-bold uppercase tracking-[0.2em]">
+                                            Deploy Window: {item.duration}
                                         </div>
                                     </div>
                                 </div>
 
-                                <div className="flex items-center gap-3">
-                                    <div className="text-right hidden sm:block mr-2">
-                                        <div className="text-[8px] font-bold text-slate-400 uppercase tracking-widest leading-none mb-1">Status</div>
-                                        <div className="font-extrabold text-[10px] uppercase" style={{ color: item.textOverride }}>{item.status.replace('-', ' ')}</div>
+                                <div className="flex items-center gap-4">
+                                    <div className="text-right hidden sm:block">
+                                        <div className="text-[9px] font-bold text-text-dim uppercase tracking-[0.2em] mb-1">Maturity Status</div>
+                                        <div className="font-display font-bold text-xs uppercase tracking-tight" style={{ color: item.color }}>{item.status.replace('-', ' ')}</div>
                                     </div>
-                                    <span className={`px-3 py-1 rounded text-[9px] font-extrabold uppercase tracking-widest border ${item.status === 'in-progress' ? 'bg-indigo-50 text-indigo-700 border-indigo-100 dark:bg-indigo-900/40 dark:text-indigo-300 dark:border-indigo-800' :
-                                        item.status === 'completed' ? 'bg-emerald-50 text-emerald-700 border-emerald-100 dark:bg-emerald-900/40 dark:text-emerald-300 dark:border-emerald-800' :
-                                            'bg-slate-50 text-slate-500 border-slate-100 dark:bg-slate-800 dark:text-slate-400 dark:border-slate-700'
-                                        }`}
-                                        style={item.status === 'in-progress' ? { backgroundColor: `${item.color}10`, color: item.textOverride, borderColor: `${item.color}25` } : {}}
-                                    >
-                                        {item.status.replace('-', ' ')}
-                                    </span>
+                                    <div className={`w-3 h-3 rounded-full shadow-[0_0_10px_rgba(255,255,255,0.1)] ${item.status === 'in-progress' ? 'bg-nist-primary shadow-[0_0_12px_rgba(99,102,241,0.5)]' :
+                                        item.status === 'completed' ? 'bg-nist-success shadow-[0_0_12px_rgba(16,185,129,0.5)]' :
+                                            'bg-gray-700'
+                                        }`} />
                                 </div>
                             </div>
 
                             {isExpanded && (
-                                <div className="px-6 pb-8 animate-in fade-in slide-in-from-top-4 duration-300">
-                                    <div className="flex flex-col gap-4">
-                                        {item.categories.length > 0 ? item.categories.map((cat, j) => {
-                                            const catKey = `${item.id}-${cat.name}`;
-                                            const isCatExpanded = expandedCategories[catKey];
+                                <div className="px-8 pb-10 relative z-10 animate-in delay-100">
+                                    <div className="flex flex-col gap-6">
+                                        {item.categories.length > 0 ? (
+                                            <div className="flex flex-col gap-5 border-l border-white/5 pl-8 ml-7">
+                                                {item.categories.map((cat, j) => {
+                                                    const catKey = `${item.id}-${cat.name}`;
+                                                    const isCatExpanded = expandedCategories[catKey];
 
-                                            return (
-                                                <div key={j} className="rounded-xl border border-slate-100 dark:border-slate-800 overflow-hidden bg-slate-50/50 dark:bg-slate-900/40">
-                                                    <div
-                                                        onClick={() => toggleCategory(item.id, cat.name)}
-                                                        className="flex items-center justify-between p-3.5 cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800/60 transition-colors"
-                                                    >
-                                                        <div className="flex items-center gap-3">
-                                                            <div className="w-7 h-7 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 flex items-center justify-center shadow-sm">
-                                                                <span className="text-[10px] font-extrabold" style={{ color: item.textOverride }}>{cat.tasks.length}</span>
-                                                            </div>
-                                                            <h4 className="font-bold text-xs text-slate-900 dark:text-slate-100">{cat.name}</h4>
-                                                        </div>
-                                                        {isCatExpanded ? <ChevronDown className="w-3.5 h-3.5 text-slate-400" /> : <ChevronRight className="w-3.5 h-3.5 text-slate-400" />}
-                                                    </div>
-
-                                                    {isCatExpanded && (
-                                                        <div className="px-3.5 pb-3.5 flex flex-col gap-2 animate-in fade-in slide-in-from-top-2 duration-200">
-                                                            {cat.tasks.map((task, k) => (
-                                                                <div key={k} className="flex flex-col gap-2 bg-white dark:bg-slate-900 p-3.5 rounded-lg border border-slate-100 dark:border-slate-800 shadow-sm">
-                                                                    <div className="flex items-center gap-2 mb-0.5">
-                                                                        <span className={`text-[8px] font-extrabold px-1.5 py-0.5 rounded uppercase tracking-widest ${task.score === 0 ? 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-400' :
-                                                                            task.score === 1 ? 'bg-rose-50 text-rose-700 dark:bg-rose-900/30 dark:text-rose-400' :
-                                                                                'bg-orange-50 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400'
-                                                                            }`}>
-                                                                            Maturity: {task.score}
-                                                                        </span>
-                                                                        <span className="text-xs font-bold text-slate-800 dark:text-slate-200">{task.label}: {task.name}</span>
+                                                    return (
+                                                        <div key={j} className="glass-pro !bg-white/5 border-white/5 overflow-hidden transition-all hover:border-white/10">
+                                                            <div
+                                                                onClick={() => toggleCategory(item.id, cat.name)}
+                                                                className="flex items-center justify-between p-5 cursor-pointer relative"
+                                                            >
+                                                                <div className="flex items-center gap-4">
+                                                                    <div className="w-8 h-8 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center shadow-inner">
+                                                                        <span className="text-[11px] font-display font-bold text-text-title">{cat.tasks.length}</span>
                                                                     </div>
-                                                                    <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed whitespace-pre-line px-0.5">
-                                                                        {task.guidance}
-                                                                    </p>
+                                                                    <h4 className="font-display font-bold text-sm text-text-title tracking-tight">{cat.name}</h4>
                                                                 </div>
-                                                            ))}
+                                                                {isCatExpanded ? <ChevronDown className="w-4 h-4 text-nist-primary" /> : <ChevronRight className="w-4 h-4 text-text-dim" />}
+                                                            </div>
+
+                                                            {isCatExpanded && (
+                                                                <div className="px-5 pb-6 flex flex-col gap-4 animate-in">
+                                                                    {cat.tasks.map((task, k) => (
+                                                                        <div key={k} className="flex flex-col gap-3 bg-white/5 p-5 rounded-2xl border border-white/5 shadow-inner">
+                                                                            <div className="flex items-center justify-between">
+                                                                                <div className="flex items-center gap-3">
+                                                                                    <span className={`text-[9px] font-bold px-2 py-0.5 rounded bg-white/5 border border-white/10 uppercase tracking-widest ${task.score === 0 ? 'text-text-dim' :
+                                                                                        task.score === 1 ? 'text-nist-danger border-nist-danger/20 bg-nist-danger/5' :
+                                                                                            'text-nist-warning border-nist-warning/20 bg-nist-warning/5'
+                                                                                        }`}>
+                                                                                        Maturity: {task.score}.0
+                                                                                    </span>
+                                                                                    <span className="text-xs font-display font-bold text-text-title tracking-tight">{task.label}: {task.name}</span>
+                                                                                </div>
+                                                                            </div>
+                                                                            <p className="text-[11px] text-text-dim leading-relaxed whitespace-pre-line border-t border-white/5 pt-3">
+                                                                                {task.guidance}
+                                                                            </p>
+                                                                        </div>
+                                                                    ))}
+                                                                </div>
+                                                            )}
                                                         </div>
-                                                    )}
+                                                    );
+                                                })}
+                                            </div>
+                                        ) : (
+                                            <div className="flex items-center gap-5 p-8 glass-pro !bg-nist-success/5 border-nist-success/20 ml-7 animate-in">
+                                                <div className="w-12 h-12 rounded-full bg-nist-success/10 flex items-center justify-center shadow-[0_0_15px_rgba(16,185,129,0.2)]">
+                                                    <CheckCircle2 className="w-6 h-6 text-nist-success" />
                                                 </div>
-                                            );
-                                        }) : (
-                                            <div className="flex items-center gap-3 p-6 bg-green-50/50 dark:bg-green-900/10 rounded-2xl border border-green-100 dark:border-green-800/30">
-                                                <CheckCircle2 className="w-6 h-6 text-green-500 shrink-0" />
-                                                <span className="text-green-800 dark:text-green-300 font-semibold">
-                                                    Compliance Accomplished: Your assessment indicates all subcategories in this function meet maturity expectations.
-                                                </span>
+                                                <div className="flex flex-col gap-1">
+                                                    <h4 className="font-display font-bold text-nist-success text-sm tracking-tight">Compliance Threshold Reached</h4>
+                                                    <p className="text-nist-success/70 text-xs leading-relaxed">System diagnostics confirm all subcategories in this function meet institutional maturity expectations. No active gaps detected.</p>
+                                                </div>
                                             </div>
                                         )}
                                     </div>

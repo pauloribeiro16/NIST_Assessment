@@ -1,0 +1,12 @@
+{
+  "id": "ffef87e0-10f6-48b1-bac3-33a20835be71",
+  "name": "Private Security Test",
+  "owner": "security_test",
+  "createdAt": "2026-03-10T17:00:54.124753",
+  "lastModified": "2026-03-10T17:00:54.124763",
+  "state": {
+    "functions": {},
+    "overallMaturity": 0.0,
+    "completionRate": 0.0
+  }
+}

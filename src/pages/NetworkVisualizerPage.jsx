@@ -52,30 +52,30 @@ const CustomNode = ({ data }) => {
     const Icon = data.icon || Activity;
     return (
         <div
-            className="w-64 bg-white dark:bg-gray-800 rounded-xl shadow-lg border-[3px] p-4 flex items-center gap-3 transition-transform hover:scale-105 cursor-pointer backdrop-blur-md"
+            className="w-72 glass-pro p-5 flex items-center gap-4 transition-all hover:scale-[1.02] active:scale-95 cursor-pointer !bg-white/5 border-white/10 group"
             style={{
-                borderColor: data.color + '80', // semi-transparent rim
-                boxShadow: `0 4px 15px ${data.color}20`
+                boxShadow: `0 8px 32px ${data.color}15`,
+                borderLeft: `4px solid ${data.color}`
             }}
         >
-            <Handle type="target" position={Position.Left} style={{ background: '#555' }} />
+            <Handle type="target" position={Position.Left} className="!w-2 !h-2 !bg-white/20 !border-none" />
 
             <div
-                className="w-12 h-12 rounded-full flex justify-center items-center flex-shrink-0"
-                style={{ backgroundColor: data.color + '20' }}
+                className="w-12 h-12 rounded-xl flex justify-center items-center flex-shrink-0 shadow-inner group-hover:scale-110 transition-transform"
+                style={{ backgroundColor: data.color + '15' }}
             >
                 <Icon className="w-6 h-6" style={{ color: data.color }} />
             </div>
 
             <div className="flex flex-col flex-1 overflow-hidden">
-                <span className="text-[10px] font-bold tracking-widest uppercase opacity-70" style={{ color: data.color }}>
+                <span className="text-[9px] font-bold tracking-[0.2em] uppercase opacity-60 mb-1" style={{ color: data.color }}>
                     {data.type}
                 </span>
-                <span className="font-bold text-sm text-gray-900 dark:text-gray-100 truncate">
+                <span className="font-display font-bold text-sm text-text-title truncate uppercase tracking-tight">
                     {data.label}
                 </span>
             </div>
-            <Handle type="source" position={Position.Right} style={{ background: '#555' }} />
+            <Handle type="source" position={Position.Right} className="!w-2 !h-2 !bg-white/20 !border-none" />
         </div>
     );
 };
@@ -202,18 +202,18 @@ export default function NetworkVisualizerPage() {
     }, [navigate]);
 
     return (
-        <div className="h-full w-full flex flex-col gap-6">
-            <header className="flex flex-col gap-2">
-                <h1 className="text-3xl font-bold tracking-tight text-gray-900 dark:text-white">
-                    Network Relationship Graph
+        <div className="h-full w-full flex flex-col gap-8 max-w-7xl mx-auto h-full px-4 animate-in">
+            <header className="flex flex-col gap-3">
+                <h1 className="text-4xl font-display font-bold tracking-tight text-text-title">
+                    Modular Relationship Architecture
                 </h1>
-                <p className="text-gray-500 dark:text-gray-400">
-                    Interactive visualization mapping the NIST CSF 2.0 Core Functions to individual assessment Categories.
-                    Click any node to navigate to its detailed scoring page.
+                <p className="text-text-dim text-sm max-w-3xl leading-relaxed italic border-l-2 border-nist-primary pl-4">
+                    A dynamic graph projection mapping core NIST CSF 2.0 functions to specific control categories, establishing a clear line of sight for institutional cybersecurity posture.
                 </p>
             </header>
 
-            <div className="flex-1 bg-gray-50 dark:bg-gray-900/50 rounded-3xl border border-gray-200 dark:border-gray-800 shadow-inner overflow-hidden relative interactive-ring">
+            <div className="flex-1 glass-pro relative overflow-hidden group border-white/5 shadow-inner p-1">
+                <div className="absolute inset-0 bg-gradient-to-br from-nist-primary/5 to-transparent pointer-events-none" />
                 <ReactFlow
                     nodes={nodes}
                     edges={edges}

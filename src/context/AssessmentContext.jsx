@@ -1,11 +1,17 @@
 import { createContext, useContext, useState, useEffect, useRef, useCallback } from 'react';
-import { useParams } from 'react-router-dom';
+
 const AssessmentContext = createContext();
 
-const API_BASE = window.location.port === '3001' ? 'http://127.0.0.1:5001' : window.location.origin;
+const API_BASE = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
+    ? 'http://127.0.0.1:5001'
+    : window.location.origin;
 const LOCAL_KEY = 'nist_assessment_cache';
 
 export function AssessmentProvider({ children }) {
+    const [authState, setAuthState] = useState({ 
+        user: { username: 'admin', full_name: 'System Administrator' }, 
+        token: 'disabled_auth_bypass_token' 
+    });
     const [activeWorkflowId, setActiveWorkflowId] = useState(null);
     const emptyAssessment = {
         overallMaturity: 0,
@@ -228,8 +234,16 @@ export function AssessmentProvider({ children }) {
     };
 
     // ── PERSISTENCE ────────────────────────────────────────────────────────────
-    const { projectId } = useParams();
+    // projectId is NOT read from useParams() here because AssessmentProvider
+    // sits above <Routes> in App.jsx — useParams() would always return undefined.
+    // Instead, DashboardLayout calls setActiveProject(id) once it's inside the route.
+    const [projectId, setProjectId] = useState(null);
+    const setActiveProject = useCallback((id) => {
+        setProjectId(prev => prev === id ? prev : id);
+    }, []);
+
     const getLocalKey = useCallback(() => `${LOCAL_KEY}_${projectId}`, [projectId]);
+
 
     // 1. Initialize from localStorage so the first render already has data.
     const [assessmentData, setAssessmentData] = useState(() => {
@@ -271,9 +285,18 @@ export function AssessmentProvider({ children }) {
             setAssessmentData(emptyAssessment);
         }
 
-        fetch(`${API_BASE}/api/projects/${projectId}`)
-            .then(r => r.json())
+        const headers = authState.token ? { 'Authorization': `Bearer ${authState.token}` } : {};
+
+        fetch(`${API_BASE}/api/projects/${projectId}`, { headers })
+            .then(r => {
+                if (!r.ok) {
+                    console.warn(`[AssessmentContext] Backend returned ${r.status} for project ${projectId}. Keeping local cache.`);
+                    return null;
+                }
+                return r.json();
+            })
             .then(data => {
+                if (!data) return; // non-OK response
                 if (data && data.functions && Object.keys(data.functions).length > 0) {
                     setAssessmentData(prev => ({
                         ...prev,
@@ -285,8 +308,39 @@ export function AssessmentProvider({ children }) {
                     try { localStorage.setItem(getLocalKey(), JSON.stringify(data)); } catch (_) { }
                 }
             })
-            .catch(() => { /* backend down — keep localStorage cache */ });
-    }, [projectId, getLocalKey]);
+            .catch((err) => { console.warn('[AssessmentContext] Backend unreachable, keeping localStorage cache:', err); });
+
+    }, [projectId, getLocalKey, authState.token]);
+
+    const login = async (username, password) => {
+        try {
+            const formData = new FormData();
+            formData.append('username', username);
+            formData.append('password', password);
+
+            const response = await fetch(`${API_BASE}/api/token`, {
+                method: 'POST',
+                body: formData
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                const newAuth = { user: { username }, token: data.access_token };
+                setAuthState(newAuth);
+                localStorage.setItem('nist_auth', JSON.stringify(newAuth));
+                return true;
+            }
+            return false;
+        } catch (err) {
+            console.error('Login error:', err);
+            return false;
+        }
+    };
+
+    const logout = () => {
+        setAuthState({ user: null, token: null });
+        localStorage.removeItem('nist_auth');
+    };
 
     // 3. Whenever scores change, persist to both localStorage (fast) and backend (debounced).
     const initDone = useRef(false);
@@ -302,16 +356,19 @@ export function AssessmentProvider({ children }) {
         };
         // Update localStorage instantly (no page refresh risk)
         try { localStorage.setItem(getLocalKey(), JSON.stringify(toSave)); } catch (_) { }
-        // Debounce backend writes — only fire 1 sec after the user stops changing values
-        clearTimeout(saveTimer.current);
+        const headers = {
+            'Content-Type': 'application/json',
+            ...(authState.token ? { 'Authorization': `Bearer ${authState.token}` } : {})
+        };
+
         saveTimer.current = setTimeout(() => {
             fetch(`${API_BASE}/api/projects/${projectId}`, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers,
                 body: JSON.stringify(toSave),
             }).catch(() => { /* silent fail — data still safe in localStorage */ });
         }, 1000);
-    }, [assessmentData, projectId, getLocalKey]);
+    }, [assessmentData, projectId, getLocalKey, authState.token]);
 
 
     const updateFunctionScore = (funcName, score, progress) => {
@@ -468,8 +525,10 @@ export function AssessmentProvider({ children }) {
 
     return (
         <AssessmentContext.Provider value={{
+            authState, login, logout,
             activeWorkflowId, setActiveWorkflowId,
             assessmentData, setAssessmentData,
+            setActiveProject,
             updateFunctionScore,
             updateCategoryScore,
             updateSubCategoryScore,

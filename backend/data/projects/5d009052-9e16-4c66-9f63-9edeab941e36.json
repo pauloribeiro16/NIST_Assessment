@@ -2,18 +2,18 @@
   "id": "5d009052-9e16-4c66-9f63-9edeab941e36",
   "name": "CCG",
   "createdAt": "2026-03-06T16:44:36.874437",
-  "lastModified": "2026-03-09T21:43:17.127424",
+  "lastModified": "2026-03-11T16:24:27.436882",
   "state": {
     "functions": {
       "Govern": {
-        "score": 3,
+        "score": 2.125,
         "progress": 75,
         "categories": {
           "Organizational Context": {
-            "score": 2,
+            "score": 2.4,
             "subcategories": {
-              "GV.OC-01": 2,
-              "GV.OC-02": 2,
+              "GV.OC-01": 3,
+              "GV.OC-02": 3,
               "GV.OC-03": 2,
               "GV.OC-04": 2,
               "GV.OC-05": 2
@@ -75,18 +75,21 @@
         }
       },
       "Identify": {
-        "score": 2.8555555555555556,
+        "score": 2.8000000000000003,
         "progress": 50,
         "categories": {
           "Asset Management": {
-            "score": 2.566666666666667,
+            "score": 2.4,
             "subcategories": {
-              "ID.AM-01": 4,
+              "ID.AM-01": 3,
               "ID.AM-02": 3,
               "ID.AM-03": 2,
               "ID.AM-05": 2,
               "ID.AM-07": 2,
               "ID.AM-08": 2.4
+            },
+            "subcategoryComments": {
+              "ID.AM-01": ""
             }
           },
           "Risk Assessment": {
@@ -240,6 +243,9 @@
               "RC.RP-01": 2,
               "RC.RP-02": 2,
               "RC.RP-03": 2
+            },
+            "subcategoryComments": {
+              "RC.RP-01": "Implementatdo "
             }
           },
           "Restoration": {
@@ -261,7 +267,8 @@
         }
       }
     },
-    "overallMaturity": 2.517592592592593,
+    "overallMaturity": 2.3625000000000003,
     "completionRate": 100.0
-  }
+  },
+  "owner": "admin"
 }

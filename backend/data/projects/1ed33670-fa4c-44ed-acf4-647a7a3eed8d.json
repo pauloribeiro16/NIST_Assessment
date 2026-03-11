@@ -1,0 +1,12 @@
+{
+  "id": "1ed33670-fa4c-44ed-acf4-647a7a3eed8d",
+  "name": "Auth Test V2",
+  "createdAt": "2026-03-10T16:52:14.889063",
+  "lastModified": "2026-03-10T16:52:14.889068",
+  "state": {
+    "functions": {},
+    "overallMaturity": 0.0,
+    "completionRate": 0.0
+  },
+  "owner": "admin"
+}

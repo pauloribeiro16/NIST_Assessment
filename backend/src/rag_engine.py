@@ -4,7 +4,7 @@ import logging
 import warnings
 import traceback
 import time
-from src.utils import get_ollama_memory, get_gpu_vram
+from src.utils import get_ollama_memory, get_gpu_vram, sanitize_prompt, sanitize_log
 from llama_index.core import (
     VectorStoreIndex,
     SimpleDirectoryReader,
@@ -32,7 +32,8 @@ def get_qdrant_client():
     return GLOBAL_QDRANT_CLIENT
 # Configurar logs
 logging.basicConfig(stream=sys.stdout, level=logging.INFO)
-logger = logging.getLogger(__name__)
+from src.utils import setup_logger
+logger = setup_logger(__name__)
 
 class RetrievalLogger:
     """Helper class to log retrieved nodes and store them for the UI trace."""
@@ -166,6 +167,8 @@ class RAGEngine:
         Executes a 3-step applicability assessment for a specific domain using the RACE framework.
         """
         start_total = time.perf_counter()
+        # Sanitize user input (A03: Injection mitigation)
+        case_text = sanitize_prompt(case_text)
         
         # Re-initialize LLM to ensure the correct model is used for the assessment
         Settings.llm = Ollama(
@@ -207,7 +210,7 @@ Return ONLY the defined dimensions clearly labeled. Do not include introductory 
             if hasattr(step1_response, 'raw') and isinstance(step1_response.raw, dict):
                 step1_tokens = (step1_response.raw.get('prompt_eval_count', 0), step1_response.raw.get('eval_count', 0))
         except Exception as e:
-            logger.error(f"Step 1 failed for {domain_name}: {e}")
+            logger.error(sanitize_log(f"Step 1 failed for {domain_name}: {e}"))
             criteria_list = "Error determining criteria."
         step1_time = time.perf_counter() - step1_start
 
@@ -250,8 +253,8 @@ Provide a step-by-step evaluation. For each dimension, state "Met", "Not Met", o
             initial_trace = local_format_nodes(self.trace_initial)
             reranked_trace = local_format_nodes(self.trace_reranked)
         except Exception as e:
-            logger.error(f"Step 2 failed for {domain_name}: {e}")
-            logger.error(traceback.format_exc())
+            logger.error(sanitize_log(f"Step 2 failed for {domain_name}: {e}"))
+            logger.error(sanitize_log(traceback.format_exc()))
             evaluation_text = f"Error performing RAG evaluation: {e}"
             initial_trace = ""
             reranked_trace = ""
@@ -285,7 +288,7 @@ For example:
             if hasattr(step3_response, 'raw') and isinstance(step3_response.raw, dict):
                 step3_tokens = (step3_response.raw.get('prompt_eval_count', 0), step3_response.raw.get('eval_count', 0))
         except Exception as e:
-            logger.error(f"Step 3 failed for {domain_name}: {e}")
+            logger.error(sanitize_log(f"Step 3 failed for {domain_name}: {e}"))
             final_decision = "Error generating final decision."
         step3_time = time.perf_counter() - step3_start
         

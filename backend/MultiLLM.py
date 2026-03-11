@@ -9,6 +9,7 @@ from rich.table import Table
 from rich.markdown import Markdown
 from rich.progress import Progress, SpinnerColumn, TextColumn
 from typing import List, Dict, Tuple, Any
+from src.utils import sanitize_prompt, mask_sensitive_data
 
 OLLAMA_API_BASE_URL = os.getenv("OLLAMA_API_BASE_URL", "http://localhost:11434/api")
 OLLAMA_GENERATE_ENDPOINT_SUFFIX = "/generate"
@@ -172,10 +173,14 @@ class CouncilLogger:
         self._write(header)
 
     def log_turn(self, phase: str, model: str, full_prompt: str, response: str):
+        # Mask sensitive data before logging (A09)
+        masked_prompt = mask_sensitive_data(full_prompt.strip())
+        masked_response = mask_sensitive_data(response.strip())
+        
         entry = (
             f"--- [{phase}] MODELO: {model} (Score: {MODEL_SCORES.get(model)}) ---\n"
-            f"[PROMPT ENVIADO]:\n{'-'*20}\n{full_prompt.strip()}\n{'-'*20}\n\n"
-            f"[RESPOSTA]:\n{response.strip()}\n"
+            f"[PROMPT ENVIADO]:\n{'-'*20}\n{masked_prompt}\n{'-'*20}\n\n"
+            f"[RESPOSTA]:\n{masked_response}\n"
             f"\n{'='*60}\n\n"
         )
         self._write(entry)
@@ -219,6 +224,8 @@ def call_ollama(model_name: str, user_prompt: str, system_prompt: str) -> str:
 # --- FASE A: INFERÊNCIA INDIVIDUAL ---
 
 def run_phase_a_step(model: str, question: str, logger: CouncilLogger) -> str:
+    # Sanitize user input (A03: Injection mitigation)
+    question = sanitize_prompt(question)
     sys_prompt = f"You are a cybersecurity expert. Analyze the scenario and provide a comprehensive assessment.\n{TEMPLATE_INDIVIDUAL}"
     resp = call_ollama(model, question, sys_prompt)
     logger.log_turn("FASE A", model, f"SYS: {sys_prompt}\nUSER: {question}", resp)
@@ -243,6 +250,8 @@ def run_phase_a(selected_models: List[str], question: str, logger: CouncilLogger
 # --- FASE C: DEBATE HIERÁRQUICO (NOVO) ---
 
 def run_debate_round_step(current_model: str, selected_models: List[str], question: str, previous_results: Dict[str, str], logger: CouncilLogger, round_num: int) -> str:
+    # Sanitize already sanitized if called from run_phase_a_step, but safe to repeat
+    question = sanitize_prompt(question)
     current_score = MODEL_SCORES[current_model]
     
     # CONSTRUIR O CONTEXTO DOS PARES
@@ -327,6 +336,8 @@ def run_debate_round(selected_models: List[str], question: str, previous_results
     return results
 
 def run_final_consensus(selected_models: List[str], question: str, final_round_results: Dict[str, str], logger: CouncilLogger):
+    # Sanitize user input
+    question = sanitize_prompt(question)
     # Identificar o Líder (Score mais alto) para redigir o consenso
     leader_model = max(selected_models, key=lambda k: MODEL_SCORES[k])
     leader_score = MODEL_SCORES[leader_model]

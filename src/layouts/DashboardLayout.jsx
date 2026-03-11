@@ -1,12 +1,21 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+
 import { Outlet, NavLink, Link, useParams, useNavigate } from 'react-router-dom';
 import { LayoutDashboard, Shield, ArrowLeft, Activity, MessageSquarePlus, Share2, Trash2 } from 'lucide-react';
 import { useAssessment } from '../context/AssessmentContext';
 
 export default function DashboardLayout() {
-    const { assessmentData, activeWorkflowId } = useAssessment();
+    const { assessmentData, activeWorkflowId, authState, logout, setActiveProject } = useAssessment();
     const { projectId } = useParams();
     const navigate = useNavigate();
+
+    // Register active project in context so data is fetched from the backend.
+    // This is necessary because AssessmentProvider sits above <Routes> in App.jsx
+    // and cannot use useParams() itself.
+    useEffect(() => {
+        if (projectId) setActiveProject(projectId);
+    }, [projectId, setActiveProject]);
+
 
     const [expandedFunc, setExpandedFunc] = useState('Identify');
 
@@ -14,8 +23,14 @@ export default function DashboardLayout() {
         if (!window.confirm("Are you sure you want to delete this company's assessment project? This action cannot be undone.")) return;
 
         try {
-            const API_BASE = window.location.port === '3001' ? 'http://127.0.0.1:5001' : window.location.origin;
-            await fetch(`${API_BASE}/api/projects/${projectId}`, { method: 'DELETE' });
+            const API_BASE = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
+                ? 'http://127.0.0.1:5001'
+                : window.location.origin;
+            const headers = authState.token ? { 'Authorization': `Bearer ${authState.token}` } : {};
+            await fetch(`${API_BASE}/api/projects/${projectId}`, {
+                method: 'DELETE',
+                headers
+            });
             navigate('/');
         } catch (e) {
             console.error(e);
@@ -25,34 +40,35 @@ export default function DashboardLayout() {
     const functions = assessmentData ? Object.keys(assessmentData.functions) : [];
 
     return (
-        <div className="flex h-screen bg-slate-50 dark:bg-dark-bg overflow-hidden text-slate-900 dark:text-slate-100 font-inter">
+        <div className="flex h-screen bg-bg-base overflow-hidden text-text-body font-sans">
             {/* Sidebar Navigation */}
-            <aside className="w-64 border-r border-slate-200 dark:border-dark-border bg-white dark:bg-dark-card flex flex-col shrink-0 shadow-sm z-10">
-                <div className="h-14 flex items-center px-5 border-b border-slate-100 dark:border-dark-border shrink-0">
-                    <div className="w-7 h-7 rounded bg-slate-900 dark:bg-blue-600 flex items-center justify-center mr-2.5 shadow-sm">
-                        <Shield className="w-4 h-4 text-white" />
+            <aside className="w-72 glass-pro m-4 mr-0 border-r-0 flex flex-col shrink-0 shadow-2xl z-20">
+                <div className="h-16 flex items-center px-6 border-b border-border-subtle shrink-0">
+                    <div className="w-8 h-8 rounded-lg bg-nist-primary flex items-center justify-center mr-3 shadow-[0_0_15px_rgba(99,102,241,0.4)]">
+                        <Shield className="w-5 h-5 text-white" />
                     </div>
-                    <h1 className="font-bold text-sm tracking-tight">NIST <span className="text-blue-600 dark:text-blue-500 font-extrabold">CSF</span></h1>
+                    <h1 className="font-display font-bold text-lg tracking-tight">NIST <span className="text-nist-primary font-extrabold uppercase italic">CSF</span></h1>
                 </div>
 
-                <div className="p-3 flex-1 overflow-y-auto hidden-scrollbar">
-                    <Link to="/" className="flex items-center gap-1.5 text-[10px] font-bold text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors mb-6 px-3 uppercase tracking-wider">
-                        <ArrowLeft className="w-3 h-3" /> All Projects
+                <div className="p-4 flex-1 overflow-y-auto hidden-scrollbar">
+                    <Link to="/" className="flex items-center gap-2 mb-8 px-3 text-[11px] font-bold text-text-dim hover:text-nist-primary transition-all uppercase tracking-[0.1em]">
+                        <ArrowLeft className="w-3.5 h-3.5" /> Back to Workspace
                     </Link>
 
-                    <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2 px-3">Main</div>
-                    <nav className="flex flex-col gap-1">
+                    <div className="text-[10px] font-bold text-text-dim uppercase tracking-widest mb-3 px-3">Strategic Dashboard</div>
+                    <nav className="flex flex-col gap-1.5">
                         <NavLink
                             to="."
                             end
                             className={({ isActive }) =>
-                                `flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-bold transition-all ${isActive
-                                    ? 'bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-white border border-slate-200 dark:border-slate-700'
-                                    : 'text-slate-500 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800/40'
+                                `flex items-center gap-3 px-4 py-2.5 rounded-xl text-xs font-semibold transition-all group ${isActive
+                                    ? 'bg-nist-primary/10 text-nist-primary border border-nist-primary/20 shadow-sm'
+                                    : 'text-text-body hover:bg-slate-100 hover:text-text-title'
+
                                 }`
                             }
                         >
-                            <LayoutDashboard className="w-4 h-4 text-blue-500" />
+                            <LayoutDashboard className={`w-4 h-4 transition-colors group-[.active]:text-nist-primary`} />
                             Executive Overview
                         </NavLink>
                     </nav>
@@ -128,31 +144,40 @@ export default function DashboardLayout() {
                 </div>
 
                 {/* Bottom Actions & Status */}
-                <div className="p-4 border-t border-slate-100 dark:border-dark-border flex flex-col gap-2">
-                    <div className="bg-slate-50 dark:bg-slate-800/40 border border-slate-100 dark:border-slate-700/50 rounded-lg p-3">
-                        <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Status</div>
-                        <div className="text-[11px] font-bold truncate flex items-center gap-2">
-                            <div className={`w-2 h-2 rounded-full ${activeWorkflowId ? 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]' : 'bg-slate-300'}`} />
-                            {activeWorkflowId || "Standby"}
+                <div className="p-6 border-t border-border-subtle flex flex-col gap-3">
+                    <div className="glass-pro p-3 !bg-slate-50">
+
+                        <div className="text-[10px] font-bold text-text-dim uppercase tracking-wider mb-2">System Status</div>
+                        <div className="text-[11px] font-semibold flex items-center gap-2.5">
+                            <div className={`w-2 h-2 rounded-full ${activeWorkflowId ? 'bg-nist-success' : 'bg-slate-300'}`} />
+
+                            <span className={activeWorkflowId ? 'text-text-title' : 'text-text-dim'}>
+                                {activeWorkflowId || "Standby Mode"}
+                            </span>
                         </div>
                     </div>
 
                     <button
                         onClick={handleDeleteProject}
-                        className="flex items-center justify-center gap-2 w-full py-2 px-3 text-xs font-bold text-rose-500 dark:text-rose-400 hover:text-white hover:bg-rose-500 dark:hover:bg-rose-600 rounded-lg transition-colors border border-transparent hover:border-rose-600 dark:hover:border-rose-500"
+                        className="flex items-center justify-center gap-2 w-full py-2.5 px-4 text-xs font-bold text-rose-400 hover:text-white hover:bg-rose-500/20 rounded-xl transition-all border border-rose-500/10 hover:border-rose-500/30"
                     >
                         <Trash2 className="w-3.5 h-3.5" />
-                        Delete Project
+                        Purge Project
+                    </button>
+
+                    <button
+                        onClick={() => { logout(); navigate('/login'); }}
+                        className="flex items-center justify-center gap-2 w-full py-2.5 px-4 text-xs font-bold text-text-dim hover:text-white hover:bg-white/5 rounded-xl transition-all border border-border-subtle"
+                    >
+                        <span className="opacity-70">Authenticated as:</span> {authState.user?.username}
                     </button>
                 </div>
             </aside>
 
             {/* Main Content Area */}
             <main className="flex-1 flex flex-col min-w-0 relative">
-                {/* Topbar removed */}
-
                 {/* Route Pages Render Here */}
-                <div className="flex-1 overflow-y-auto p-6 md:p-8">
+                <div className="flex-1 overflow-y-auto p-8 md:p-12 animate-in">
                     <Outlet />
                 </div>
             </main>

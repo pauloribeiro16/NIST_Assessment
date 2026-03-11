@@ -5,7 +5,10 @@ import DOMPurify from 'dompurify';
 import { marked } from 'marked';
 
 export default function CopilotSidebar({ onClose }) {
-    const { addChatMessage, assessmentData, updateFunctionScore, updateCategoryScore, updateSubCategoryScore, clearChatHistory } = useAssessment();
+    const { authState, addChatMessage, assessmentData, updateFunctionScore, updateCategoryScore, updateSubCategoryScore, clearChatHistory } = useAssessment();
+    const API_BASE = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
+        ? 'http://127.0.0.1:5001'
+        : window.location.origin;
     const [inputValue, setInputValue] = useState('');
     const [models, setModels] = useState([]);
     const [selectedModel, setSelectedModel] = useState('');
@@ -18,7 +21,8 @@ export default function CopilotSidebar({ onClose }) {
     useEffect(() => {
         const fetchModels = async () => {
             try {
-                const res = await fetch('http://127.0.0.1:5001/api/models');
+                const headers = authState.token ? { 'Authorization': `Bearer ${authState.token}` } : {};
+                const res = await fetch(`${API_BASE}/api/models`, { headers });
                 const data = await res.json();
                 setModels(data.models || []);
                 if (data.models?.length > 0) setSelectedModel(data.models[0].name);
@@ -46,9 +50,13 @@ export default function CopilotSidebar({ onClose }) {
         history.push({ role: 'user', content: userMsg.content });
 
         try {
-            const res = await fetch('http://127.0.0.1:5001/api/nist/chat', {
+            const headers = {
+                'Content-Type': 'application/json',
+                ...(authState.token ? { 'Authorization': `Bearer ${authState.token}` } : {})
+            };
+            const res = await fetch(`${API_BASE}/api/nist/chat`, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers,
                 body: JSON.stringify({
                     model_name: selectedModel,
                     message: userMsg.content,

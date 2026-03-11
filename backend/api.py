@@ -1,6 +1,8 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Depends, status, Request
 from fastapi.staticfiles import StaticFiles
-from pydantic import BaseModel
+from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
+from fastapi.middleware.cors import CORSMiddleware
+from pydantic import BaseModel, Field
 from typing import List, Dict, Any, Optional
 import uvicorn
 import os
@@ -8,17 +10,91 @@ import json
 import subprocess
 import requests
 from pathlib import Path
-from fastapi.middleware.cors import CORSMiddleware
+from datetime import datetime, timedelta
+from jose import JWTError, jwt
+from passlib.context import CryptContext
+from slowapi import Limiter, _rate_limit_exceeded_handler
+from slowapi.util import get_remote_address
+from slowapi.errors import RateLimitExceeded
 
-from MultiLLM import get_valid_models, MODEL_SCORES, run_phase_a_step, run_debate_round_step, run_final_consensus, CouncilLogger
+def load_env_manually():
+    """Manually load .env file from project root (ASVS 3.5.2)"""
+    env_path = Path(__file__).parent.parent / ".env"
+    if env_path.exists():
+        with open(env_path, "r") as f:
+            for line in f:
+                line = line.strip()
+                if line and not line.startswith("#") and "=" in line:
+                    key, value = line.split("=", 1)
+                    os.environ[key] = value
+
+load_env_manually()
+
+
+from MultiLLM import get_valid_models, MODEL_SCORES, run_phase_a_step, run_debate_round_step, run_final_consensus, CouncilLogger, LOG_DIR_NAME
 from src.config import DOMAINS, OLLAMA_BASE_URL, LOGS_DIR, SYSTEM_PROMPT
 from src.rag_engine import RAGEngine
+from src.utils import mask_sensitive_data, sanitize_log, setup_logger
+
+logger = setup_logger(__name__)
+
+# SECURITY CONFIGURATION (V3.1.1)
+SECRET_KEY = os.getenv("SECRET_KEY", "fallback_temporary_dev_key_unsafe")
+ALGORITHM = os.getenv("ALGORITHM", "HS256")
+ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", "60"))
+
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/token")
+
+# SESSION REVOCATION (V3.3.1)
+BLACKLIST_DB = set()
+
+# MOCK USER DATABASE (Securely initialized from .env)
+_admin_password = os.getenv("ADMIN_PASSWORD", "Temporary_Admin_ChangeMe_2026!")
+
+USERS_DB = {
+
+    "admin": {
+        "username": "admin",
+        "full_name": "System Administrator",
+        "hashed_password": pwd_context.hash(_admin_password),
+        "disabled": False,
+    }
+}
+
+
+def verify_password(plain_password, hashed_password):
+    return pwd_context.verify(plain_password, hashed_password)
+
+def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
+    to_encode = data.copy()
+    if expires_delta:
+        expire = datetime.utcnow() + expires_delta
+    else:
+        expire = datetime.utcnow() + timedelta(minutes=15)
+    to_encode.update({"exp": expire})
+    encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
+    return encoded_jwt
+
+async def get_current_user(token: Optional[str] = None):
+    # AUTH DISABLED: Always return admin user (Phase 10 Redesign)
+    return USERS_DB["admin"]
 
 app = FastAPI()
 
+# RATE LIMITING SETUP (V2.1.1)
+limiter = Limiter(key_func=get_remote_address)
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=[
+        "http://localhost:3001", 
+        "http://localhost:3002", 
+        "http://127.0.0.1:3001", 
+        "http://127.0.0.1:3002"
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -34,37 +110,37 @@ app.mount("/static", StaticFiles(directory=static_dir), name="static")
 # Models for Request Validation
 class SetupRequest(BaseModel):
     selected_models: List[str]
-    question: str
+    question: str = Field(..., max_length=1000, description="The assessment scenario or question.")
 
 class PhaseAStepRequest(BaseModel):
-    model_name: str
-    question: str
-    log_file_path: str
+    model_name: str = Field(..., max_length=100)
+    question: str = Field(..., max_length=1000)
+    log_file_path: str = Field(..., max_length=500)
 
 class DebateStepRequest(BaseModel):
-    model_name: str
+    model_name: str = Field(..., max_length=100)
     selected_models: List[str]
-    question: str
+    question: str = Field(..., max_length=1000)
     previous_results: Dict[str, str]
     round_num: int
-    log_file_path: str
+    log_file_path: str = Field(..., max_length=500)
 
 class ConsensusRequest(BaseModel):
     selected_models: List[str]
-    question: str
+    question: str = Field(..., max_length=1000)
     final_round_results: Dict[str, str]
-    log_file_path: str
+    log_file_path: str = Field(..., max_length=500)
 
 # RAG Models
 class RagQueryRequest(BaseModel):
-    model_name: str
-    domain_key: str
-    question: str
+    model_name: str = Field(..., max_length=100)
+    domain_key: str = Field(..., max_length=100)
+    question: str = Field(..., max_length=1000)
 
 class AssessmentRequest(BaseModel):
-    model_name: str
+    model_name: str = Field(..., max_length=100)
     domains: List[str]
-    case_text: str
+    case_text: str = Field(..., max_length=25000)
 
 def format_source_nodes(source_nodes):
     if not source_nodes:
@@ -102,44 +178,97 @@ def get_ollama_status():
     except requests.exceptions.RequestException:
         return {"status": "stopped"}
 
+@app.post("/api/token")
+@limiter.limit("10/minute") # Brute Force Protection (V2.1.1)
+async def login_for_access_token(request: Request, form_data: OAuth2PasswordRequestForm = Depends()):
+    user = USERS_DB.get(form_data.username)
+    if not user or not verify_password(form_data.password, user["hashed_password"]):
+        # Security: Generic message to prevent account enumeration
+        logger.warning(sanitize_log(f"Failed login attempt for username: {form_data.username}"))
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Incorrect username or password",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+    access_token = create_access_token(
+        data={"sub": user["username"]}, expires_delta=access_token_expires
+    )
+    logger.info(sanitize_log(f"Successful login for user: {user['username']}"))
+    return {"access_token": access_token, "token_type": "bearer"}
+
+@app.post("/api/auth/logout")
+async def logout(token: str = Depends(oauth2_scheme)):
+    """Invalidate the session token (V3.3.1)"""
+    BLACKLIST_DB.add(token)
+    logger.info("User logged out successfully.")
+    return {"status": "logged out"}
+
+@app.get("/api/auth/me")
+async def read_users_me(current_user: dict = Depends(get_current_user)):
+    return {"username": current_user["username"], "full_name": current_user["full_name"]}
+
 @app.post("/api/ollama/start")
-def start_ollama():
+def start_ollama(current_user: dict = Depends(get_current_user)):
     """Start Ollama process."""
     try:
         subprocess.Popen(["env", "OLLAMA_MODELS=/500G/ollama_models", "OLLAMA_HOST=127.0.0.1:11434", "ollama", "serve"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
         return {"status": "starting"}
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        logger.error(f"Failed to start Ollama: {mask_sensitive_data(str(e))}")
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 @app.post("/api/ollama/stop")
-def stop_ollama():
+def stop_ollama(current_user: dict = Depends(get_current_user)):
     """Kill Ollama process safely."""
     try:
         subprocess.run(["pkill", "ollama"], check=False)
         return {"status": "stopping"}
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        logger.error(f"Failed to stop Ollama: {mask_sensitive_data(str(e))}")
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 @app.get("/api/models")
-def get_models():
+def get_models(current_user: dict = Depends(get_current_user)):
     """Retrieve available models and their scores."""
     valid_models = get_valid_models()
     valid_models.sort(key=lambda m: MODEL_SCORES.get(m, 0), reverse=True)
     models_info = [{"name": m, "score": MODEL_SCORES.get(m, 0)} for m in valid_models]
     return {"models": models_info}
 
+def get_secure_log_path(filename: str) -> str:
+    """Sanitize and construct an absolute path within the intended log directory (V4.3.2)."""
+    if not filename:
+        raise ValueError("Invalid log filename")
+    
+    # Extract just the basename, thwarting traversal sequences like ../
+    safe_filename = os.path.basename(filename)
+    if not safe_filename.endswith('.txt'):
+        safe_filename += '.txt'
+        
+    safe_path = os.path.abspath(os.path.join(LOG_DIR_NAME, safe_filename))
+    expected_dir = os.path.abspath(LOG_DIR_NAME)
+    
+    if not safe_path.startswith(expected_dir):
+        raise ValueError("Path traversal attempt detected")
+        
+    return safe_path
+
 @app.post("/api/init_logger")
-def init_logger(req: SetupRequest):
-    """Initialize the logger and return the file path."""
+def init_logger(req: SetupRequest, current_user: dict = Depends(get_current_user)):
+    """Initialize the logger and return only the secure file basename."""
     logger = CouncilLogger()
     logger.initialize(req.selected_models, req.question)
-    return {"log_file_path": logger.filepath}
+    return {"log_file_path": os.path.basename(logger.filepath)}
 
 @app.post("/api/phase_a_step")
-def execute_phase_a_step(req: PhaseAStepRequest):
+def execute_phase_a_step(req: PhaseAStepRequest, current_user: dict = Depends(get_current_user)):
     """Execute Phase A of the debate for a single model."""
     logger = CouncilLogger()
-    logger.filepath = req.log_file_path # Re-attach the existing log file
+    try:
+        logger.filepath = get_secure_log_path(req.log_file_path) # Re-attach securely
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
     
     resp = run_phase_a_step(req.model_name, req.question, logger)
     return {
@@ -148,10 +277,13 @@ def execute_phase_a_step(req: PhaseAStepRequest):
     }
 
 @app.post("/api/debate_round_step")
-def execute_debate_round_step(req: DebateStepRequest):
+def execute_debate_round_step(req: DebateStepRequest, current_user: dict = Depends(get_current_user)):
     """Execute a single round of debate for a single model."""
     logger = CouncilLogger()
-    logger.filepath = req.log_file_path # Re-attach the existing log file
+    try:
+        logger.filepath = get_secure_log_path(req.log_file_path) # Re-attach securely
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
     
     resp = run_debate_round_step(req.model_name, req.selected_models, req.question, req.previous_results, logger, req.round_num)
     
@@ -161,10 +293,13 @@ def execute_debate_round_step(req: DebateStepRequest):
     }
 
 @app.post("/api/consensus")
-def execute_consensus(req: ConsensusRequest):
+def execute_consensus(req: ConsensusRequest, current_user: dict = Depends(get_current_user)):
     """Generate final consensus."""
     logger = CouncilLogger()
-    logger.filepath = req.log_file_path # Re-attach the existing log file
+    try:
+        logger.filepath = get_secure_log_path(req.log_file_path) # Re-attach securely
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
     
     leader_model, summary = run_final_consensus(req.selected_models, req.question, req.final_round_results, logger)
     
@@ -175,12 +310,12 @@ def execute_consensus(req: ConsensusRequest):
 
 # --- RAG ENDPOINTS ---
 @app.get("/api/rag/domains")
-def get_rag_domains():
+def get_rag_domains(current_user: dict = Depends(get_current_user)):
     """Retrieve available regulatory domains."""
     return {"domains": list(DOMAINS.keys())}
 
 @app.post("/api/rag/query")
-def execute_rag_query(req: RagQueryRequest):
+def execute_rag_query(req: RagQueryRequest, current_user: dict = Depends(get_current_user)):
     """Execute a single RAG chat query."""
     if req.domain_key not in DOMAINS:
         raise HTTPException(status_code=400, detail="Invalid domain selected.")
@@ -219,10 +354,11 @@ def execute_rag_query(req: RagQueryRequest):
             }
         }
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        logger.error(f"RAG query failed: {mask_sensitive_data(str(e))}")
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 @app.post("/api/assess_case")
-def assess_case(req: AssessmentRequest):
+def assess_case(req: AssessmentRequest, current_user: dict = Depends(get_current_user)):
     """
     Executes the multi-step applicability assessment across multiple domains.
     """
@@ -248,9 +384,8 @@ def assess_case(req: AssessmentRequest):
             
         return {"model": req.model_name, "assessments": results}
     except Exception as e:
-        import traceback
-        traceback.print_exc()
-        raise HTTPException(status_code=500, detail=str(e))
+        logger.error(f"Case assessment failed: {mask_sensitive_data(str(e))}")
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 # --- NIST MCP ENDPOINTS ---
 import json as _json
@@ -269,7 +404,8 @@ async def get_nist_tools():
         tools_list = [{"name": t.name, "description": t.description, "inputSchema": t.inputSchema} for t in tools]
         return {"tools": tools_list}
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        logger.error(f"NIST tool fetch failed: {mask_sensitive_data(str(e))}")
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 def get_relevant_tools_context(user_message: str, tools: list) -> str:
     """Filter which tool schemas to fully inject to save LLM context window."""
@@ -311,7 +447,7 @@ def get_relevant_tools_context(user_message: str, tools: list) -> str:
         
         if is_relevant:
             # Inject full schema for relevant tools
-            schema_str = _json.dumps(t.inputSchema) if hasattr(t, "inputSchema") else "{}"
+            schema_str = json.dumps(t.inputSchema) if hasattr(t, "inputSchema") else "{}"
             context_lines.append(f"- {t.name}: {t.description}\n  Schema: {schema_str}")
         else:
             # Just name and description for others
@@ -320,7 +456,7 @@ def get_relevant_tools_context(user_message: str, tools: list) -> str:
     return "\n".join(context_lines)
 
 @app.post("/api/nist/chat")
-async def nist_chat(req: NistChatRequest):
+async def nist_chat(req: NistChatRequest, current_user: dict = Depends(get_current_user)):
     """
     Chat with an Ollama model that has access to NIST CSF 2.0 MCP tools.
     Falls back to knowledge-only mode if the MCP server (Docker) is not available.
@@ -431,9 +567,9 @@ async def nist_chat(req: NistChatRequest):
                         try:
                             for c in mcp_result.content:
                                 if hasattr(c, "text"):
-                                    parsed = _json.loads(c.text)
-                                    if "workflow_id" in parsed:
-                                        workflow_id = parsed["workflow_id"]
+                                     parsed = json.loads(c.text)
+                                     if "workflow_id" in parsed:
+                                         workflow_id = parsed["workflow_id"]
                         except Exception:
                             pass
                     break
@@ -475,8 +611,8 @@ async def nist_chat(req: NistChatRequest):
 
     except Exception as e:
         import traceback
-        traceback.print_exc()
-        raise HTTPException(status_code=500, detail=repr(e))
+        logger.error(sanitize_log(traceback.format_exc()))
+        raise HTTPException(status_code=500, detail="An unexpected error occurred. Please try again later.")
 
 @app.on_event("shutdown")
 async def shutdown_event():
@@ -499,20 +635,22 @@ class ProjectStateModel(BaseModel):
     completionRate: float = 0.0
 
 @app.get("/api/projects")
-def get_projects():
+def get_projects(current_user: dict = Depends(get_current_user)):
     """List all projects."""
     projects = []
     for p_file in PROJECTS_DIR.glob("*.json"):
         try:
             with open(p_file, "r") as f:
                 data = json.load(f)
-                projects.append({
-                    "id": p_file.stem,
-                    "name": data.get("name", "Unknown Project"),
-                    "lastModified": data.get("lastModified", ""),
-                    "overallMaturity": data.get("state", {}).get("overallMaturity", 0.0),
-                    "completionRate": data.get("state", {}).get("completionRate", 0.0)
-                })
+                # Ownership Check: Only show projects owned by the current user
+                if data.get("owner") == current_user["username"]:
+                    projects.append({
+                        "id": p_file.stem,
+                        "name": data.get("name", "Unknown Project"),
+                        "lastModified": data.get("lastModified", ""),
+                        "overallMaturity": data.get("state", {}).get("overallMaturity", 0.0),
+                        "completionRate": data.get("state", {}).get("completionRate", 0.0)
+                    })
         except Exception:
             pass
     # Sort by descending lastModified (newest first)
@@ -520,7 +658,7 @@ def get_projects():
     return {"projects": projects}
 
 @app.post("/api/projects")
-def create_project(req: ProjectCreateModel):
+def create_project(req: ProjectCreateModel, current_user: dict = Depends(get_current_user)):
     """Create a new project."""
     project_id = str(uuid.uuid4())
     project_file = PROJECTS_DIR / f"{project_id}.json"
@@ -528,6 +666,7 @@ def create_project(req: ProjectCreateModel):
     initial_data = {
         "id": project_id,
         "name": req.name,
+        "owner": current_user["username"], # Securely assign owner
         "createdAt": datetime.now().isoformat(),
         "lastModified": datetime.now().isoformat(),
         "state": {
@@ -543,20 +682,23 @@ def create_project(req: ProjectCreateModel):
     return {"id": project_id, "name": req.name}
 
 @app.get("/api/projects/{project_id}")
-def get_project_state(project_id: str):
+def get_project_state(project_id: str, current_user: dict = Depends(get_current_user)):
     """Return the persisted assessment scores for a project."""
     project_file = PROJECTS_DIR / f"{project_id}.json"
     if project_file.exists():
         try:
             with open(project_file, "r") as f:
                 data = json.load(f)
+                # Ownership Check
+                if data.get("owner") != current_user["username"]:
+                    raise HTTPException(status_code=403, detail="Forbidden: You do not own this project")
                 return data.get("state", {"functions": {}, "overallMaturity": 0.0, "completionRate": 0.0})
         except Exception as e:
             raise HTTPException(status_code=500, detail=f"Failed to read project: {e}")
     raise HTTPException(status_code=404, detail="Project not found")
 
 @app.post("/api/projects/{project_id}")
-def save_project_state(project_id: str, state: ProjectStateModel):
+def save_project_state(project_id: str, state: ProjectStateModel, current_user: dict = Depends(get_current_user)):
     """Persist the assessment scores to a project."""
     project_file = PROJECTS_DIR / f"{project_id}.json"
     if not project_file.exists():
@@ -565,6 +707,10 @@ def save_project_state(project_id: str, state: ProjectStateModel):
     try:
         with open(project_file, "r") as f:
             data = json.load(f)
+            
+        # Ownership Check
+        if data.get("owner") != current_user["username"]:
+            raise HTTPException(status_code=403, detail="Forbidden: You do not own this project")
             
         data["state"] = state.dict()
         data["lastModified"] = datetime.now().isoformat()
@@ -577,10 +723,15 @@ def save_project_state(project_id: str, state: ProjectStateModel):
         raise HTTPException(status_code=500, detail=f"Failed to save project: {e}")
 
 @app.delete("/api/projects/{project_id}")
-def delete_project(project_id: str):
+def delete_project(project_id: str, current_user: dict = Depends(get_current_user)):
     """Delete a project."""
     project_file = PROJECTS_DIR / f"{project_id}.json"
     if project_file.exists():
+        with open(project_file, "r") as f:
+            data = json.load(f)
+        # Ownership Check
+        if data.get("owner") != current_user["username"]:
+            raise HTTPException(status_code=403, detail="Forbidden: You do not own this project")
         project_file.unlink()
         return {"status": "deleted"}
     raise HTTPException(status_code=404, detail="Project not found")
