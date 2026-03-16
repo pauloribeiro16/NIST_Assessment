@@ -174,13 +174,13 @@ export default function ProjectSelectionPage() {
                                 <div className="grid grid-cols-2 gap-10">
                                     <div>
                                         <div className="text-[10px] uppercase tracking-[0.2em] text-text-dim/80 font-bold mb-2">Maturity</div>
-                                        <div className="font-display font-bold text-2xl text-nist-primary flex items-baseline gap-1.5 glow-text-sm">
+                                        <div className="font-display font-bold text-2xl text-nist-primary flex items-baseline gap-1.5">
                                             {p.overallMaturity.toFixed(1)} <span className="text-[10px] text-text-dim font-bold uppercase">Score</span>
                                         </div>
                                     </div>
                                     <div>
                                         <div className="text-[10px] uppercase tracking-[0.2em] text-text-dim/80 font-bold mb-2">Integrity</div>
-                                        <div className="font-display font-bold text-2xl text-nist-success glow-text-sm">{p.completionRate}%</div>
+                                        <div className="font-display font-bold text-2xl text-nist-success">{p.completionRate}%</div>
                                     </div>
                                 </div>
 
