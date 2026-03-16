@@ -54,16 +54,16 @@ O sistema opera com um fluxo de dados consolidado entre a interface e o auditor:
 
 ```mermaid
 graph TD
-    A[Selecção de Projecto] --> B[Executive Dashboard]
-    B --> C[Govern / Identify / Protect / Detect / Respond / Recover]
-    C --> D[Category Tree Grid]
-    D --> E[Subcategory Item]
-    E --> F[Score Input (0-4)]
+    A["Selecção de Projecto"] --> B["Executive Dashboard"]
+    B --> C["Govern / Identify / Protect / Detect / Respond / Recover"]
+    C --> D["Category Tree Grid"]
+    D --> E["Subcategory Item"]
+    E --> F["Score Input (0-4)"]
     F -->|Rollup Instantâneo| D
     D -->|Rollup Instantâneo| C
     C -->|Rollup Instantâneo| B
-    E --> G[Guidance Sidebar / Copilot IA]
-    B --> H[AI Copilot Global Sidebar]
+    E --> G["Guidance Sidebar / Copilot IA"]
+    B --> H["AI Copilot Global Sidebar"]
 ```
 
 ---
