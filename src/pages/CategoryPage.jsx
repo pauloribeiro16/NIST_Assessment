@@ -4,7 +4,7 @@ import { useAssessment } from '../context/AssessmentContext';
 import { Bar } from 'react-chartjs-2';
 import {
     ShieldAlert, CheckCircle, Activity, Info, ChevronRight,
-    ShieldCheck, Fingerprint, Crosshair, ServerCrash, Siren, Share2
+    ShieldCheck, Fingerprint, Crosshair, ServerCrash, Siren, Share2, CalendarPlus
 } from 'lucide-react';
 import {
     Chart as ChartJS,
@@ -27,7 +27,7 @@ ChartJS.register(
 
 export default function CategoryPage() {
     const { funcId, categoryId, projectId } = useParams();
-    const { assessmentData, updateSubCategoryScore, updateSubCategoryComment } = useAssessment();
+    const { assessmentData, updateSubCategoryScore, updateSubCategoryComment, updateActionPlan } = useAssessment();
     const [localInputs, setLocalInputs] = useState({});
 
     // Find the correct function name
@@ -143,6 +143,28 @@ export default function CategoryPage() {
         setLocalInputs(prev => ({ ...prev, [label]: val }));
     };
 
+    const handleAddToGantt = (label) => {
+        const guidance = assessmentData.nistGuidance[label]?.guidance || '';
+        const name = assessmentData.nistGuidance[label]?.name || label;
+        
+        const today = new Date();
+        const nextMonth = new Date();
+        nextMonth.setDate(today.getDate() + 30);
+        
+        const newItem = {
+            id: label,
+            name: name,
+            startDate: today.toISOString().split('T')[0],
+            endDate: nextMonth.toISOString().split('T')[0],
+            customGuidance: guidance
+        };
+
+        updateActionPlan(prev => {
+            if (prev.find(item => item.id === label)) return prev; 
+            return [...prev, newItem];
+        });
+    };
+
     return (
         <div className="flex flex-col gap-10 max-w-6xl mx-auto h-full px-4 pb-24 animate-in">
             <header className="flex flex-col gap-6">
@@ -151,7 +173,7 @@ export default function CategoryPage() {
                     <Link to={`/project/${projectId}`} className="hover:text-nist-primary transition-all">Strategic Overview</Link>
                     <ChevronRight className="w-3 h-3 opacity-30" />
                     <Link
-                        to={`/project/${projectId}/function/${funcId}`}
+                        to={`/project/${projectId}/assessment/${funcId}`}
                         className="hover:text-nist-primary transition-all"
                         style={{ color: functionColor }}
                     >
@@ -214,8 +236,10 @@ export default function CategoryPage() {
                             <p className="text-[9px] text-text-dim/60 italic">Real-time control calibration</p>
                         </div>
                         <div className="flex flex-col gap-3 overflow-y-auto pr-2 hidden-scrollbar">
-                            {subLabels.map(label => (
-                                <div key={label} className="flex flex-col gap-4 p-5 rounded-2xl bg-slate-50 border border-slate-200 transition-all hover:bg-slate-100 hover:border-slate-300 group">
+                             {subLabels.map(label => {
+                                 const isInGantt = assessmentData?.actionPlan?.some(item => item.id === label);
+                                 return (
+                                     <div key={label} className="flex flex-col gap-4 p-5 rounded-2xl bg-slate-50 border border-slate-200 transition-all hover:bg-slate-100 hover:border-slate-300 group">
 
                                     <div className="flex items-center justify-between gap-4">
                                         <div className="flex flex-col min-w-0">
@@ -224,7 +248,7 @@ export default function CategoryPage() {
                                                 {assessmentData.nistGuidance[label]?.name || assessmentData.nistGuidance[label.trim()]?.name || label}
                                             </span>
                                         </div>
-                                        <div className="relative group/val">
+                                        <div className="relative group/val flex items-center gap-2">
                                             <input
                                                 type="number"
                                                 min="0"
@@ -235,6 +259,18 @@ export default function CategoryPage() {
                                                 onBlur={() => handleInputBlur(label)}
                                                 className="w-12 h-10 text-center text-sm font-display font-bold bg-white border border-slate-200 rounded-xl text-text-title outline-none focus:border-nist-primary/50 transition-all shadow-sm"
                                             />
+                                             <button 
+                                                 onClick={() => handleAddToGantt(label)}
+                                                 disabled={isInGantt}
+                                                 className={`h-10 w-10 flex items-center justify-center rounded-xl border transition-all shadow-sm ${
+                                                     isInGantt 
+                                                     ? 'bg-nist-success/10 border-nist-success/30 text-nist-success cursor-default' 
+                                                     : 'bg-slate-100 border-slate-200 hover:bg-slate-200 text-slate-500 hover:text-nist-primary'
+                                                 }`}
+                                                 title={isInGantt ? "Adicionado ao Cronograma" : "Adicionar ao Cronograma (Gantt)"}
+                                             >
+                                                 {isInGantt ? <CheckCircle className="w-4 h-4" /> : <CalendarPlus className="w-4 h-4" />}
+                                             </button>
                                         </div>
                                     </div>
                                     <input
@@ -247,8 +283,9 @@ export default function CategoryPage() {
                                         className="w-full h-1.5 cursor-pointer rounded-full bg-slate-200 accent-nist-primary appearance-none transition-all hover:bg-slate-300"
                                         style={{ accentColor: functionColor }}
                                     />
-                                </div>
-                            ))}
+                                 </div>
+                                 );
+                             })}
                         </div>
                     </div>
                 </div>

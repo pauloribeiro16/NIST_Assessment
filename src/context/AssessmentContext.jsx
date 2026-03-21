@@ -16,6 +16,7 @@ export function AssessmentProvider({ children }) {
     const emptyAssessment = {
         overallMaturity: 0,
         completionRate: 0,
+        actionPlan: [],
         functions: {
             "Govern": {
                 score: 0, progress: 0,
@@ -254,9 +255,11 @@ export function AssessmentProvider({ children }) {
                 const parsed = JSON.parse(cached);
                 return {
                     ...emptyAssessment,
+                    name: parsed.name || '',
                     functions: parsed.functions || emptyAssessment.functions,
                     overallMaturity: parsed.overallMaturity ?? 0,
                     completionRate: parsed.completionRate ?? 0,
+                    actionPlan: parsed.actionPlan || []
                 };
             }
         } catch (_) { }
@@ -274,6 +277,7 @@ export function AssessmentProvider({ children }) {
                 const parsed = JSON.parse(cached);
                 setAssessmentData({
                     ...emptyAssessment,
+                    name: parsed.name || '',
                     functions: parsed.functions || emptyAssessment.functions,
                     overallMaturity: parsed.overallMaturity ?? 0,
                     completionRate: parsed.completionRate ?? 0,
@@ -300,9 +304,11 @@ export function AssessmentProvider({ children }) {
                 if (data && data.functions && Object.keys(data.functions).length > 0) {
                     setAssessmentData(prev => ({
                         ...prev,
+                        name: data.name || prev.name || '',
                         functions: data.functions,
                         overallMaturity: data.overallMaturity ?? prev.overallMaturity,
                         completionRate: data.completionRate ?? prev.completionRate,
+                        actionPlan: data.actionPlan || prev.actionPlan || []
                     }));
                     // Also update the local cache with the canonical backend data
                     try { localStorage.setItem(getLocalKey(), JSON.stringify(data)); } catch (_) { }
@@ -353,6 +359,7 @@ export function AssessmentProvider({ children }) {
             functions: assessmentData.functions,
             overallMaturity: assessmentData.overallMaturity,
             completionRate: assessmentData.completionRate,
+            actionPlan: assessmentData.actionPlan || []
         };
         // Update localStorage instantly (no page refresh risk)
         try { localStorage.setItem(getLocalKey(), JSON.stringify(toSave)); } catch (_) { }
@@ -509,6 +516,13 @@ export function AssessmentProvider({ children }) {
         });
     };
 
+    const updateActionPlan = (newPlan) => {
+        setAssessmentData(prev => ({
+            ...prev,
+            actionPlan: typeof newPlan === 'function' ? newPlan(prev.actionPlan || []) : newPlan
+        }));
+    };
+
     const addChatMessage = (msg) => {
         setAssessmentData(prev => ({
             ...prev,
@@ -533,6 +547,7 @@ export function AssessmentProvider({ children }) {
             updateCategoryScore,
             updateSubCategoryScore,
             updateSubCategoryComment,
+            updateActionPlan,
             addChatMessage,
             clearChatHistory
         }}>

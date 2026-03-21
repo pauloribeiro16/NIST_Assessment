@@ -90,6 +90,8 @@ app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
+        "http://localhost:3000",
+        "http://127.0.0.1:3000",
         "http://localhost:3001", 
         "http://localhost:3002", 
         "http://127.0.0.1:3001", 
@@ -633,6 +635,7 @@ class ProjectStateModel(BaseModel):
     functions: Dict[str, Any]
     overallMaturity: float = 0.0
     completionRate: float = 0.0
+    actionPlan: List[Dict[str, Any]] = []
 
 @app.get("/api/projects")
 def get_projects(current_user: dict = Depends(get_current_user)):
@@ -689,10 +692,15 @@ def get_project_state(project_id: str, current_user: dict = Depends(get_current_
         try:
             with open(project_file, "r") as f:
                 data = json.load(f)
-                # Ownership Check
-                if data.get("owner") != current_user["username"]:
+                # Ownership Check - treat missing owner as 'admin' for legacy projects
+                project_owner = data.get("owner", "admin")
+                current_username = current_user["username"] if isinstance(current_user, dict) else str(current_user)
+                if project_owner != current_username:
                     raise HTTPException(status_code=403, detail="Forbidden: You do not own this project")
-                return data.get("state", {"functions": {}, "overallMaturity": 0.0, "completionRate": 0.0})
+                
+                state_data = data.get("state", {"functions": {}, "overallMaturity": 0.0, "completionRate": 0.0})
+                state_data["name"] = data.get("name", "Unnamed Project")
+                return state_data
         except Exception as e:
             raise HTTPException(status_code=500, detail=f"Failed to read project: {e}")
     raise HTTPException(status_code=404, detail="Project not found")
@@ -726,15 +734,21 @@ def save_project_state(project_id: str, state: ProjectStateModel, current_user: 
 def delete_project(project_id: str, current_user: dict = Depends(get_current_user)):
     """Delete a project."""
     project_file = PROJECTS_DIR / f"{project_id}.json"
-    if project_file.exists():
-        with open(project_file, "r") as f:
-            data = json.load(f)
-        # Ownership Check
-        if data.get("owner") != current_user["username"]:
-            raise HTTPException(status_code=403, detail="Forbidden: You do not own this project")
-        project_file.unlink()
-        return {"status": "deleted"}
-    raise HTTPException(status_code=404, detail="Project not found")
+    if not project_file.exists():
+        raise HTTPException(status_code=404, detail="Project not found")
+    
+    with open(project_file, "r") as f:
+        data = json.load(f)
+    
+    # Ownership Check - treat missing owner as 'admin' for legacy projects
+    project_owner = data.get("owner", "admin")
+    current_username = current_user["username"] if isinstance(current_user, dict) else str(current_user)
+    
+    if project_owner != current_username:
+        raise HTTPException(status_code=403, detail="Forbidden: You do not own this project")
+    
+    project_file.unlink()
+    return {"status": "deleted"}
 
 
 if __name__ == "__main__":

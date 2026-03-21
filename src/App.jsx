@@ -2,10 +2,12 @@ import { useState } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AssessmentProvider, useAssessment } from './context/AssessmentContext';
 import DashboardLayout from './layouts/DashboardLayout';
+import AssessmentLayout from './layouts/AssessmentLayout';
 import OverviewPage from './pages/OverviewPage';
 import CategoryPage from './pages/CategoryPage';
 import FunctionPage from './pages/FunctionPage';
 import RoadmapPage from './pages/RoadmapPage';
+import AssessmentSummaryPage from './pages/AssessmentSummaryPage';
 import NetworkVisualizerPage from './pages/NetworkVisualizerPage';
 import CopilotSidebar from './components/CopilotSidebar';
 import ProjectSelectionPage from './pages/ProjectSelectionPage';
@@ -28,10 +30,14 @@ function ProjectApp() {
         <Routes>
           <Route path="/" element={<DashboardLayout />}>
             <Route index element={<OverviewPage />} />
-            <Route path="function/:funcId" element={<FunctionPage />} />
-            <Route path="category/:funcId/:categoryId" element={<CategoryPage />} />
             <Route path="visualizer" element={<NetworkVisualizerPage />} />
             <Route path="roadmap" element={<RoadmapPage />} />
+          </Route>
+          
+          <Route path="assessment" element={<AssessmentLayout />}>
+            <Route index element={<AssessmentSummaryPage />} />
+            <Route path=":funcId" element={<AssessmentSummaryPage />} />
+            <Route path=":funcId/:categoryId" element={<CategoryPage />} />
           </Route>
         </Routes>
       </div>

@@ -2,7 +2,7 @@
   "id": "31279e31-bc4b-4e99-a594-eedef78a5b92",
   "name": "CCG",
   "createdAt": "2026-03-06T18:56:47.126742",
-  "lastModified": "2026-03-09T14:06:12.914834",
+  "lastModified": "2026-03-21T00:52:09.359022",
   "state": {
     "functions": {
       "Govern": {
@@ -256,7 +256,16 @@
       }
     },
     "overallMaturity": 1.4439814814814813,
-    "completionRate": 56.0
+    "completionRate": 56.0,
+    "actionPlan": [
+      {
+        "id": "GV.PO-01",
+        "name": "Cybersecurity Policy",
+        "startDate": "2026-03-21",
+        "endDate": "2026-04-19",
+        "customGuidance": "A cybersecurity policy is established and communicated.\n\n\u2022 Draft and approve a formal cybersecurity policy.\n\u2022 Distribute and acknowledge it organization-wide.\n\u2022 Review and update at least annually."
+      }
+    ]
   },
   "owner": "admin"
 }

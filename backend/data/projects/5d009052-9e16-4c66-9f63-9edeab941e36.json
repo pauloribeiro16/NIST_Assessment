@@ -2,7 +2,7 @@
   "id": "5d009052-9e16-4c66-9f63-9edeab941e36",
   "name": "CCG",
   "createdAt": "2026-03-06T16:44:36.874437",
-  "lastModified": "2026-03-16T14:51:19.217261",
+  "lastModified": "2026-03-21T00:58:45.675507",
   "state": {
     "functions": {
       "Govern": {
@@ -268,7 +268,16 @@
       }
     },
     "overallMaturity": 2.3625000000000003,
-    "completionRate": 100.0
+    "completionRate": 100.0,
+    "actionPlan": [
+      {
+        "id": "GV.OC-01",
+        "name": "Mission and Strategic Alignment",
+        "startDate": "2026-03-21",
+        "endDate": "2026-04-19",
+        "customGuidance": "Ensure cybersecurity strategy supports the organizational mission.\n\n\u2022 Document the organizational mission and vision.\n\u2022 Map cybersecurity objectives to business goals.\n\u2022 Review alignment annually with leadership."
+      }
+    ]
   },
   "owner": "admin"
 }

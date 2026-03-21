@@ -3,9 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Building2, Plus, ArrowRight, Trash2, Shield } from 'lucide-react';
 import { useAssessment } from '../context/AssessmentContext';
 
-const API_BASE = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
-    ? 'http://127.0.0.1:5001'
-    : window.location.origin;
+const API_BASE = `${window.location.protocol}//${window.location.hostname}:5001`;
 
 export default function ProjectSelectionPage() {
     const [projects, setProjects] = useState([]);
@@ -55,12 +53,20 @@ export default function ProjectSelectionPage() {
         if (!window.confirm("Are you sure you want to delete this project?")) return;
         try {
             const headers = authState.token ? { 'Authorization': `Bearer ${authState.token}` } : {};
-            await fetch(`${API_BASE}/api/projects/${id}`, {
+            const res = await fetch(`${API_BASE}/api/projects/${id}`, {
                 method: 'DELETE',
                 headers
             });
-            fetchProjects();
-        } catch (e) { }
+            if (!res.ok) {
+                const err = await res.json().catch(() => ({}));
+                alert(`Error deleting project: ${err.detail || res.statusText}`);
+            } else {
+                fetchProjects();
+            }
+        } catch (e) {
+            console.error("Delete network error:", e);
+            alert("Network error. Verify API connection.");
+        }
     };
 
     const selectProject = (id) => {
@@ -140,7 +146,7 @@ export default function ProjectSelectionPage() {
                         <div
                             key={p.id}
                             onClick={() => selectProject(p.id)}
-                            className="glass-pro p-8 group flex flex-col gap-8 transition-all duration-500 hover:translate-y-[-4px] animate-in overflow-hidden relative"
+                            className="glass-pro p-8 group flex flex-col gap-8 transition-all duration-500 hover:translate-y-[-4px] animate-in relative cursor-pointer"
                             style={{ animationDelay: `${idx * 50}ms` }}
                         >
                             {/* Decorative Accent */}
@@ -163,7 +169,8 @@ export default function ProjectSelectionPage() {
                                 </div>
                                 <button
                                     onClick={(e) => handleDelete(e, p.id)}
-                                    className="text-text-dim hover:text-nist-danger transition-all p-3 hover:bg-nist-danger/10 rounded-xl shrink-0 invisible group-hover:visible animate-in"
+                                    className="relative z-20 text-text-dim hover:text-nist-danger transition-all p-3 hover:bg-nist-danger/10 rounded-xl shrink-0 opacity-60 hover:opacity-100 cursor-pointer"
+                                    title="Delete project"
                                 >
                                     <Trash2 className="w-4 h-4" />
                                 </button>

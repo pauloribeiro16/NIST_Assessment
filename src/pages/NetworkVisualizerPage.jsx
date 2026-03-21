@@ -157,7 +157,7 @@ export default function NetworkVisualizerPage() {
                 Object.keys(categories).forEach((catName) => {
                     const cleanCatId = catName.toLowerCase().replace(/\s+/g, '-');
                     const catId = `cat-${funcName}-${cleanCatId}`;
-                    const catUrl = `/project/${projectId}/category/${funcName.toLowerCase()}/${cleanCatId}`;
+                    const catUrl = `/project/${projectId}/assessment/${funcName.toLowerCase()}/${cleanCatId}`;
 
                     initialNodes.push({
                         id: catId,

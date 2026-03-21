@@ -1,0 +1,4 @@
+Checking for file: /home/epmq/Desktop/Projects/NIST_Assessment/backend/data/projects/1ed33670-fa4c-44ed-acf4-647a7a3eed8d.json
+File exists: True
+Owner in file: admin
+RESULT: OK - Owner matches
