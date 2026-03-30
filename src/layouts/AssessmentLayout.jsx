@@ -38,7 +38,7 @@ export default function AssessmentLayout() {
                     className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 transition-all text-sm font-bold text-text-title shadow-sm"
                 >
                     <ArrowLeft className="w-4 h-4 text-nist-primary" />
-                    Voltar ao Dashboard
+                    Back to Dashboard
                 </Link>
             </header>
 

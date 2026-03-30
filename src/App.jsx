@@ -12,9 +12,17 @@ import NetworkVisualizerPage from './pages/NetworkVisualizerPage';
 import CopilotSidebar from './components/CopilotSidebar';
 import ProjectSelectionPage from './pages/ProjectSelectionPage';
 import LoginPage from './pages/LoginPage';
+// import RegisterPage from './pages/RegisterPage'; // Standby
+import ProfilePage from './pages/ProfilePage';
+import UsersPage from './pages/UsersPage';
+import { useAssessmentStore } from './store/useAssessmentStore';
 
 function ProtectedRoute({ children }) {
-  // AUTH DISABLED for Phase 10 Redesign
+  const { authState } = useAssessmentStore();
+  
+  if (!authState || !authState.token) {
+    return <Navigate to="/login" replace />;
+  }
   return children;
 }
 
@@ -31,13 +39,14 @@ function ProjectApp() {
           <Route path="/" element={<DashboardLayout />}>
             <Route index element={<OverviewPage />} />
             <Route path="visualizer" element={<NetworkVisualizerPage />} />
+            <Route path="profile" element={<ProfilePage />} />
+            <Route path="users" element={<UsersPage />} />
             <Route path="roadmap" element={<RoadmapPage />} />
-          </Route>
-          
-          <Route path="assessment" element={<AssessmentLayout />}>
-            <Route index element={<AssessmentSummaryPage />} />
-            <Route path=":funcId" element={<AssessmentSummaryPage />} />
-            <Route path=":funcId/:categoryId" element={<CategoryPage />} />
+            <Route path="assessment">
+              <Route index element={<AssessmentSummaryPage />} />
+              <Route path=":funcId" element={<AssessmentSummaryPage />} />
+              <Route path=":funcId/:categoryId" element={<CategoryPage />} />
+            </Route>
           </Route>
         </Routes>
       </div>
@@ -70,6 +79,7 @@ export default function App() {
       <AssessmentProvider>
         <Routes>
           <Route path="/login" element={<LoginPage />} />
+          {/* <Route path="/register" element={<RegisterPage />} /> Standby */}
           <Route path="/" element={
             <ProtectedRoute>
               <ProjectSelectionPage />

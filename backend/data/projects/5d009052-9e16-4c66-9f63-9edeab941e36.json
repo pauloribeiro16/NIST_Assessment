@@ -2,7 +2,7 @@
   "id": "5d009052-9e16-4c66-9f63-9edeab941e36",
   "name": "CCG",
   "createdAt": "2026-03-06T16:44:36.874437",
-  "lastModified": "2026-03-21T00:58:45.675507",
+  "lastModified": "2026-03-30T14:32:31.754098",
   "state": {
     "functions": {
       "Govern": {
@@ -75,18 +75,18 @@
         }
       },
       "Identify": {
-        "score": 2.8000000000000003,
+        "score": 2.777777777777778,
         "progress": 50,
         "categories": {
           "Asset Management": {
-            "score": 2.4,
+            "score": 2.3333333333333335,
             "subcategories": {
               "ID.AM-01": 3,
               "ID.AM-02": 3,
               "ID.AM-03": 2,
               "ID.AM-05": 2,
               "ID.AM-07": 2,
-              "ID.AM-08": 2.4
+              "ID.AM-08": 2
             },
             "subcategoryComments": {
               "ID.AM-01": ""
@@ -267,7 +267,7 @@
         }
       }
     },
-    "overallMaturity": 2.3625000000000003,
+    "overallMaturity": 2.3587962962962963,
     "completionRate": 100.0,
     "actionPlan": [
       {
@@ -276,6 +276,202 @@
         "startDate": "2026-03-21",
         "endDate": "2026-04-19",
         "customGuidance": "Ensure cybersecurity strategy supports the organizational mission.\n\n\u2022 Document the organizational mission and vision.\n\u2022 Map cybersecurity objectives to business goals.\n\u2022 Review alignment annually with leadership."
+      },
+      {
+        "id": "GV.OC-02",
+        "name": "Internal & External Context",
+        "startDate": "2026-03-21",
+        "endDate": "2026-04-20",
+        "customGuidance": "Understand the internal and external environment that affects cybersecurity risk.\n\n\u2022 Identify regulatory and legal requirements.\n\u2022 Assess supplier and partner dependencies.\n\u2022 Map threat landscape relevant to the org."
+      },
+      {
+        "id": "GV.OC-03",
+        "name": "Legal & Regulatory Requirements",
+        "startDate": "2026-03-21",
+        "endDate": "2026-04-20",
+        "customGuidance": "Legal, regulatory and contractual cybersecurity obligations are understood.\n\n\u2022 Catalog applicable laws (e.g. GDPR, HIPAA).\n\u2022 Track changes to regulations.\n\u2022 Assign ownership for each compliance area."
+      },
+      {
+        "id": "PR.AA-01",
+        "name": "Identity & Credential Management",
+        "startDate": "2026-03-21",
+        "endDate": "2026-04-20",
+        "customGuidance": "Identities and credentials are managed throughout their lifecycle.\n\n\u2022 Enforce MFA on all privileged and external accounts.\n\u2022 Automate provisioning and de-provisioning.\n\u2022 Review access rights quarterly."
+      },
+      {
+        "id": "PR.AA-02",
+        "name": "Physical Access Control",
+        "startDate": "2026-03-21",
+        "endDate": "2026-04-20",
+        "customGuidance": "Physical access to assets is managed and protected.\n\n\u2022 Use badge access and CCTV in sensitive areas.\n\u2022 Log physical access to server rooms.\n\u2022 Escort visitors in restricted zones."
+      },
+      {
+        "id": "ID.AM-01",
+        "name": "Physical Device Inventory",
+        "startDate": "2026-03-30",
+        "endDate": "2026-04-29",
+        "customGuidance": "An inventory of physical devices and systems is maintained.\n\n\u2022 Implement automated asset discovery (e.g. Nmap, Lansweeper).\n\u2022 Document hardware specs, location, and owner.\n\u2022 Track lifecycle from procurement to decommissioning."
+      },
+      {
+        "id": "ID.AM-02",
+        "name": "Software & Platforms Inventory",
+        "startDate": "2026-03-30",
+        "endDate": "2026-04-29",
+        "customGuidance": "An inventory of software platforms and applications is maintained.\n\n\u2022 Catalog all authorized software by version.\n\u2022 Track license expiration and renewals.\n\u2022 Detect and remove unauthorized applications."
+      },
+      {
+        "id": "ID.AM-03",
+        "name": "Communication & Data Flows",
+        "startDate": "2026-03-30",
+        "endDate": "2026-04-29",
+        "customGuidance": "Communication and data flows are documented and mapped.\n\n\u2022 Create network topology and data flow diagrams.\n\u2022 Identify all external connections.\n\u2022 Classify data flows by sensitivity."
+      },
+      {
+        "id": "ID.AM-08",
+        "name": "Systems, Hardware & Software Lifecycle",
+        "startDate": "2026-03-30",
+        "endDate": "2026-04-29",
+        "customGuidance": "Systems, hardware, software and services are managed through their lifecycle.\n\n\u2022 Define EOL policies for hardware and software.\n\u2022 Plan timely replacements before EOL dates.\n\u2022 Maintain records of decommissioned assets."
+      },
+      {
+        "id": "ID.AM-07",
+        "name": "Inventories of Data",
+        "startDate": "2026-03-30",
+        "endDate": "2026-04-29",
+        "customGuidance": "Inventories of data and their corresponding information systems are maintained.\n\n\u2022 Create a data inventory with classification labels.\n\u2022 Map data to the systems that store or process it.\n\u2022 Review data inventory after major system changes."
+      },
+      {
+        "id": "ID.IM-03",
+        "name": "Improvements from Execution",
+        "startDate": "2026-03-30",
+        "endDate": "2026-04-29",
+        "customGuidance": "Improvements are identified from execution of operational processes.\n\n\u2022 Review operational security metrics monthly.\n\u2022 Identify bottlenecks or repeated failures.\n\u2022 Feed lessons into process improvement cycles."
+      },
+      {
+        "id": "ID.IM-02",
+        "name": "Improvements from Security Tests",
+        "startDate": "2026-03-30",
+        "endDate": "2026-04-29",
+        "customGuidance": "Plans and processes are improved based on security tests and exercises.\n\n\u2022 Conduct tabletop exercises and red team exercises.\n\u2022 Document gaps discovered and assign owners.\n\u2022 Re-test after improvements are implemented."
+      },
+      {
+        "id": "ID.IM-04",
+        "name": "Incident Lessons Learned",
+        "startDate": "2026-03-30",
+        "endDate": "2026-04-29",
+        "customGuidance": "Incident response plans incorporate lessons learned.\n\n\u2022 Conduct post-incident reviews (PIRs) within 2 weeks.\n\u2022 Update playbooks based on findings.\n\u2022 Share non-sensitive lessons across the organization."
+      },
+      {
+        "id": "RS.MI-01",
+        "name": "Incidents Contained for Limiting Impact",
+        "startDate": "2026-03-30",
+        "endDate": "2026-04-29",
+        "customGuidance": "Incidents are contained, mitigated, and newly identified vulnerabilities mitigated.\n\n\u2022 Apply emergency patches or workarounds.\n\u2022 Remove attacker persistence mechanisms.\n\u2022 Monitor for re-infection after remediation."
+      },
+      {
+        "id": "RS.MI-02",
+        "name": "Incidents Eradicated",
+        "startDate": "2026-03-30",
+        "endDate": "2026-04-29",
+        "customGuidance": "Incidents are eradicated and systems restored to a known good state.\n\n\u2022 Rebuild or re-image compromised systems.\n\u2022 Verify integrity of restored systems.\n\u2022 Rescan for vulnerabilities after recovery."
+      },
+      {
+        "id": "RS.MA-01",
+        "name": "Incident Response Plan Execution",
+        "startDate": "2026-03-30",
+        "endDate": "2026-04-29",
+        "customGuidance": "The incident response plan is executed and maintained.\n\n\u2022 Activate IR plan immediately upon declaration.\n\u2022 Follow pre-defined playbooks for common incident types.\n\u2022 Test the plan at least annually."
+      },
+      {
+        "id": "RS.MA-02",
+        "name": "Incident Reports Triaged",
+        "startDate": "2026-03-30",
+        "endDate": "2026-04-29",
+        "customGuidance": "Incident reports are triaged to ensure timely handling.\n\n\u2022 Establish SLAs for triage (e.g. P1 within 15 min).\n\u2022 Use a dedicated ticket queue for security incidents.\n\u2022 Assign incident coordinators for each event."
+      },
+      {
+        "id": "RS.MA-03",
+        "name": "Incidents Categorized & Prioritized",
+        "startDate": "2026-03-30",
+        "endDate": "2026-04-29",
+        "customGuidance": "Incidents are categorized and prioritized to guide response.\n\n\u2022 Use a severity matrix based on impact and urgency.\n\u2022 Maintain a priority queue in the IR ticketing system.\n\u2022 Escalate high-severity incidents to leadership immediately."
+      },
+      {
+        "id": "RS.CO-02",
+        "name": "Personnel Notified of Incident",
+        "startDate": "2026-03-30",
+        "endDate": "2026-04-29",
+        "customGuidance": "Internal stakeholders are notified of incidents in a timely manner.\n\n\u2022 Define notification trees by incident severity.\n\u2022 Use out-of-band communication channels (e.g. phone).\n\u2022 Document time and method of notifications."
+      },
+      {
+        "id": "RS.CO-03",
+        "name": "Information Shared Externally",
+        "startDate": "2026-03-30",
+        "endDate": "2026-04-29",
+        "customGuidance": "Information is shared with external partners per incident response plans.\n\n\u2022 Report to regulators within required timeframes (e.g. 72 hrs for GDPR).\n\u2022 Notify affected customers and partners as required.\n\u2022 Coordinate disclosures with legal and PR teams."
+      },
+      {
+        "id": "RC.CO-03",
+        "name": "Recovery Activities Communicated",
+        "startDate": "2026-03-30",
+        "endDate": "2026-04-29",
+        "customGuidance": "Recovery activities are communicated to internal and external stakeholders.\n\n\u2022 Provide regular status updates during recovery.\n\u2022 Use predefined templates for communications.\n\u2022 Archive all communications for audit purposes."
+      },
+      {
+        "id": "RC.CO-04",
+        "name": "Public Communications Coordinated",
+        "startDate": "2026-03-30",
+        "endDate": "2026-04-29",
+        "customGuidance": "Public communications about the recovery are coordinated with leadership.\n\n\u2022 Align external statements with PR and legal.\n\u2022 Avoid speculative or premature disclosures.\n\u2022 Issue a formal post-incident summary when appropriate."
+      },
+      {
+        "id": "DE.CM-01",
+        "name": "Networks Monitored",
+        "startDate": "2026-03-30",
+        "endDate": "2026-04-29",
+        "customGuidance": "Networks and network services are monitored for anomalies.\n\n\u2022 Deploy IDS/IPS at network boundaries.\n\u2022 Analyze NetFlow and packet captures.\n\u2022 Alert on unusual traffic volumes or destinations."
+      },
+      {
+        "id": "DE.CM-02",
+        "name": "Physical Environment Monitored",
+        "startDate": "2026-03-30",
+        "endDate": "2026-04-29",
+        "customGuidance": "The physical environment is monitored for unauthorized access.\n\n\u2022 Install CCTV in key areas.\n\u2022 Use environmental sensors (temp, humidity).\n\u2022 Alert on after-hours physical access."
+      },
+      {
+        "id": "DE.CM-06",
+        "name": "External Service Provider Activity Monitored",
+        "startDate": "2026-03-30",
+        "endDate": "2026-04-29",
+        "customGuidance": "External service provider activity is monitored for compliance.\n\n\u2022 Log and review third-party access sessions.\n\u2022 Require vendors to report security events.\n\u2022 Audit vendor activity quarterly."
+      },
+      {
+        "id": "DE.CM-09",
+        "name": "Computing Hardware & Software Monitored",
+        "startDate": "2026-03-30",
+        "endDate": "2026-04-29",
+        "customGuidance": "Computing hardware and software activities are monitored for anomalies.\n\n\u2022 Deploy EDR on all endpoints.\n\u2022 Alert on new processes, drivers, or registry changes.\n\u2022 Monitor software inventory changes in real-time."
+      },
+      {
+        "id": "DE.AE-02",
+        "name": "Potentially Adverse Events Analyzed",
+        "startDate": "2026-03-30",
+        "endDate": "2026-04-29",
+        "customGuidance": "Potentially adverse events are analyzed to understand attack targets and methods.\n\n\u2022 Triage all security alerts within defined SLAs.\n\u2022 Correlate events across multiple log sources.\n\u2022 Tag events by MITRE ATT&CK technique."
+      },
+      {
+        "id": "DE.AE-03",
+        "name": "Information Correlated from Multiple Sources",
+        "startDate": "2026-03-30",
+        "endDate": "2026-04-29",
+        "customGuidance": "Information is correlated from multiple sources to understand attacks.\n\n\u2022 Integrate SIEM with threat intelligence platforms.\n\u2022 Consume threat feeds in SIEM rules.\n\u2022 Cross-reference indicators of compromise (IoCs).\n\u2022 Pivot from indicators to broader threat actor profiles."
+      },
+      {
+        "id": "DE.AE-04",
+        "name": "Estimated Impact of Adverse Events",
+        "startDate": "2026-03-30",
+        "endDate": "2026-04-29",
+        "customGuidance": "The estimated impact and scope of adverse events is understood.\n\n\u2022 Classify events by severity and potential impact.\n\u2022 Estimate affected assets and data.\n\u2022 Update classification as investigations progress."
       }
     ]
   },

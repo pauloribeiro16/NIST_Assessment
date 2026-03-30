@@ -54,16 +54,15 @@ export default function AssessmentSummaryPage() {
                         <button
                             key={func}
                             onClick={() => navigate(`/project/${projectId}/assessment/${func.toLowerCase()}`)}
-                            className={`flex items-center gap-2 px-6 py-4 text-xs font-bold tracking-wider uppercase border-b-2 transition-all shrink-0 ${
+                            className={`flex items-center gap-2 px-6 py-4 text-xs font-black tracking-wider uppercase border-2 border-slate-900 rounded-xl transition-all shadow-[2px_2px_0px_0px_rgba(15,23,42,1)] active:translate-y-[1px] hover:-translate-y-0.5 hover:shadow-[3px_3px_0px_0px_rgba(15,23,42,1)] ${
                                 isActive 
-                                ? 'border-nist-primary text-text-title bg-slate-800/20' 
-                                : 'border-transparent text-text-dim hover:text-text-title hover:bg-white/5'
+                                ? 'bg-white text-slate-800 font-extrabold' 
+                                : 'bg-white/90 text-slate-600'
                             }`}
-                            style={isActive ? { borderColor: color } : {}}
                         >
-                            <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: color }} />
+                            <div className="w-2.5 h-2.5 rounded-full border border-slate-900" style={{ backgroundColor: color }} />
                             {func}
-                            <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-md bg-white/5 text-slate-400">
+                            <span className="text-[10px] font-black px-1.5 py-0.5 rounded-md bg-slate-100 border border-slate-900 text-slate-800">
                                 {score.toFixed(1)}
                             </span>
                         </button>
@@ -78,8 +77,7 @@ export default function AssessmentSummaryPage() {
                     const scorePercentage = (score / 4) * 100;
 
                     return (
-                        <div key={catName} className="glass-pro p-6 flex flex-col justify-between gap-5 relative overflow-hidden transition-all hover:border-white/10 group">
-                            <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
+                        <div key={catName} className="bg-white border-2 border-slate-900 p-6 flex flex-col justify-between gap-5 relative overflow-hidden rounded-2xl shadow-[3px_3px_0px_0px_rgba(15,23,42,1)] hover:shadow-[5px_5px_0px_0px_rgba(15,23,42,1)] hover:-translate-y-1 transition-all group">
                             
                             <div className="flex flex-col gap-3 relative">
                                 <h3 className="text-sm font-display font-bold text-text-title tracking-tight">{catName}</h3>
@@ -94,10 +92,10 @@ export default function AssessmentSummaryPage() {
 
                             <Link 
                                 to={`/project/${projectId}/assessment/${activeFunc}/${catName.toLowerCase().replace(/\s+/g, '-')}`}
-                                className="mt-4 flex items-center justify-between w-full py-2.5 px-4 rounded-xl border border-white/10 hover:border-white/20 bg-white/5 hover:bg-white/10 text-xs font-bold text-text-title transition-all group/btn"
+                                className="mt-4 flex items-center justify-between w-full py-2.5 px-4 rounded-xl border-2 border-slate-900 bg-white hover:bg-slate-50 text-xs font-black text-slate-800 shadow-[2px_2px_0px_0px_rgba(15,23,42,1)] hover:shadow-[3px_3px_0px_0px_rgba(15,23,42,1)] transition-all group/btn"
                             >
-                                <span>Ajustar Controlos</span>
-                                <ArrowRight className="w-4 h-4 text-text-dim group-hover/btn:translate-x-1 group-hover/btn:text-white transition-all" />
+                                <span>Adjust Controls</span>
+                                <ArrowRight className="w-4 h-4 text-slate-800 group-hover/btn:translate-x-1 transition-all" />
                             </Link>
                         </div>
                     );

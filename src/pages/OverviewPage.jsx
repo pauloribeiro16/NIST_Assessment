@@ -41,25 +41,27 @@ export default function OverviewPage() {
     const scores = labels.map(label => parseFloat((assessmentData.functions[label]?.score || 0).toFixed(1)));
     const functionColors = labels.map(label => assessmentData.nistColors?.[label] || '#3b82f6');
 
-    const radarData = {
-        labels,
-        datasets: [
-            {
-                label: 'Maturity Score',
-                data: scores,
-                backgroundColor: 'rgba(99, 102, 241, 0.1)',
-                borderColor: '#6366f1',
-                borderWidth: 3,
-                pointBackgroundColor: functionColors,
-                pointBorderColor: '#fff',
-                pointHoverBackgroundColor: '#fff',
-                pointHoverBorderColor: functionColors,
-                pointRadius: 6,
-                pointHoverRadius: 9,
-                tension: 0.2
-            },
-        ],
-    };
+        const radarData = {
+            labels,
+            datasets: [
+                {
+                    label: 'Maturity Score',
+                    data: scores,
+                    backgroundColor: 'rgba(99, 102, 241, 0.25)', // Preenchimento mais forte
+                    borderColor: '#0f172a', // slate-900 hard border
+                    borderWidth: 4,
+                    pointBackgroundColor: functionColors,
+                    pointBorderColor: '#0f172a', // Contorno escuro para os pontos
+                    pointBorderWidth: 2,
+                    pointHoverBackgroundColor: '#0f172a',
+                    pointHoverBorderColor: functionColors,
+                    pointHoverBorderWidth: 3,
+                    pointRadius: 6,
+                    pointHoverRadius: 9,
+                    tension: 0 // Tension = 0 para linhas retas e duras (Neo-brutalist)
+                },
+            ],
+        };
 
     // Inline plugin: always draw score labels next to each radar point
     const alwaysShowLabels = {
@@ -99,27 +101,27 @@ export default function OverviewPage() {
         }
     };
 
-    const radarOptions = {
-        scales: {
-            r: {
-                min: 0,
-                max: 4,
-                ticks: {
-                    stepSize: 1,
-                    backdropColor: 'transparent',
-                    color: '#64748b',
-                    callback: (v) => v.toFixed(1),
-                    font: { size: 10, family: 'Inter', weight: '600' }
-                },
-                angleLines: { color: 'rgba(0, 0, 0, 0.08)' },
-                grid: { color: 'rgba(0, 0, 0, 0.07)' },
-                pointLabels: {
-                    color: '#334155',
-                    font: { size: 12, weight: '700', family: 'Outfit' }
-                },
-
-            }
-        },
+        const radarOptions = {
+            scales: {
+                r: {
+                    min: 0,
+                    max: 4,
+                    ticks: {
+                        stepSize: 1,
+                        backdropColor: 'transparent',
+                        color: '#334155', // slate-700
+                        callback: (v) => v.toFixed(1),
+                        font: { size: 11, family: 'Inter', weight: '800' }
+                    },
+                    angleLines: { color: '#0f172a', lineWidth: 1.5 }, // Linhas retangulares fortes
+                    grid: { color: '#0f172a', lineWidth: 1.5, circular: false }, // Grelhas poligonais escuras
+                    pointLabels: {
+                        color: '#0f172a', // slate-900
+                        font: { size: 12, weight: '900', family: 'Outfit' },
+                        padding: 15
+                    },
+                }
+            },
         plugins: {
             legend: { display: false },
         },
@@ -136,7 +138,7 @@ export default function OverviewPage() {
 
             {/* Top KPIs */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                <div className="glass-pro p-6 flex flex-col gap-2 relative overflow-hidden group animate-in delay-200">
+                <div className="bg-white border-2 border-slate-900 shadow-[6px_6px_0px_0px_rgba(15,23,42,1)] rounded-2xl p-6 flex flex-col gap-2 relative overflow-hidden group animate-in delay-200">
                     <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
                         <TrendingUp className="w-12 h-12 text-nist-primary" />
                     </div>
@@ -150,7 +152,7 @@ export default function OverviewPage() {
                     </div>
                 </div>
 
-                <div className="glass-pro p-6 flex flex-col gap-2 relative overflow-hidden group animate-in delay-300">
+                <div className="bg-white border-2 border-slate-900 shadow-[6px_6px_0px_0px_rgba(15,23,42,1)] rounded-2xl p-6 flex flex-col gap-2 relative overflow-hidden group animate-in delay-300">
                     <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
                         <ShieldCheck className="w-12 h-12 text-nist-success" />
                     </div>
@@ -164,7 +166,7 @@ export default function OverviewPage() {
                     </div>
                 </div>
 
-                <div className="glass-pro p-6 flex flex-col gap-2 relative overflow-hidden group animate-in delay-400">
+                <div className="bg-white border-2 border-slate-900 shadow-[6px_6px_0px_0px_rgba(15,23,42,1)] rounded-2xl p-6 flex flex-col gap-2 relative overflow-hidden group animate-in delay-400">
                     <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
                         <AlertTriangle className="w-12 h-12 text-nist-danger" />
                     </div>
@@ -180,8 +182,8 @@ export default function OverviewPage() {
             </div>
 
             {/* Radar Chart */}
-            <div className="flex-1 min-h-[480px] glass-pro p-8 flex flex-col animate-in delay-500">
-                <div className="flex items-center justify-between mb-10 border-b border-slate-100 pb-6">
+            <div className="flex-1 min-h-[480px] bg-white border-2 border-slate-900 shadow-[8px_8px_0px_0px_rgba(15,23,42,1)] rounded-2xl p-8 flex flex-col animate-in delay-500">
+                <div className="flex items-center justify-between mb-10 border-b-2 border-slate-100 pb-6">
 
                     <div className="flex flex-col gap-1">
                         <h3 className="text-xs font-bold uppercase tracking-[0.2em] text-text-title">Governance Maturity Radar</h3>

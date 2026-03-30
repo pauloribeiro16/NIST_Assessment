@@ -2,19 +2,19 @@
   "id": "31279e31-bc4b-4e99-a594-eedef78a5b92",
   "name": "CCG",
   "createdAt": "2026-03-06T18:56:47.126742",
-  "lastModified": "2026-03-21T00:52:09.359022",
+  "lastModified": "2026-03-21T16:40:06.941171",
   "state": {
     "functions": {
       "Govern": {
-        "score": 0.4166666666666667,
+        "score": 0.65,
         "progress": 0,
         "categories": {
           "Organizational Context": {
-            "score": 0,
+            "score": 1.4,
             "subcategories": {
-              "GV.OC-01": 0,
-              "GV.OC-02": 0,
-              "GV.OC-03": 0,
+              "GV.OC-01": 2,
+              "GV.OC-02": 2,
+              "GV.OC-03": 3,
               "GV.OC-04": 0,
               "GV.OC-05": 0
             }
@@ -255,8 +255,8 @@
         }
       }
     },
-    "overallMaturity": 1.4439814814814813,
-    "completionRate": 56.0,
+    "overallMaturity": 1.4828703703703703,
+    "completionRate": 59.0,
     "actionPlan": [
       {
         "id": "GV.PO-01",

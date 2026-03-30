@@ -11,45 +11,24 @@ import {
     Position
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
-import dagre from 'dagre';
+// layout logic moved to layoutWorker.js for performance
 import { useAssessment } from '../context/AssessmentContext';
 import { ShieldCheck, Crosshair, Fingerprint, Activity, Siren, ActivitySquare, ServerCrash } from 'lucide-react';
 
-const dagreGraph = new dagre.graphlib.Graph();
-dagreGraph.setDefaultEdgeLabel(() => ({}));
-
-const getLayoutedElements = (nodes, edges, direction = 'LR') => {
-    const isHorizontal = direction === 'LR';
-    dagreGraph.setGraph({ rankdir: direction, nodesep: 100, ranksep: 200 });
-
-    nodes.forEach((node) => {
-        // Approximate wrapper size
-        dagreGraph.setNode(node.id, { width: 250, height: 100 });
-    });
-
-    edges.forEach((edge) => {
-        dagreGraph.setEdge(edge.source, edge.target);
-    });
-
-    dagre.layout(dagreGraph);
-
-    nodes.forEach((node) => {
-        const nodeWithPosition = dagreGraph.node(node.id);
-        node.targetPosition = isHorizontal ? 'left' : 'top';
-        node.sourcePosition = isHorizontal ? 'right' : 'bottom';
-        node.position = {
-            x: nodeWithPosition.x - 125,
-            y: nodeWithPosition.y - 50,
-        };
-        return node;
-    });
-
-    return { nodes, edges };
+const functionIcons = {
+    'Govern': Crosshair,
+    'Identify': Fingerprint,
+    'Protect': ShieldCheck,
+    'Detect': ActivitySquare,
+    'Respond': Siren,
+    'Recover': ServerCrash
 };
+
+// getLayoutedElements was removed and is now executed inside layoutWorker.js
 
 // Custom Node for distinct visual style
 const CustomNode = ({ data }) => {
-    const Icon = data.icon || Activity;
+    const Icon = functionIcons[data.label] || Activity;
     return (
         <div
             className="w-72 glass-pro p-5 flex items-center gap-4 transition-all hover:scale-[1.02] active:scale-95 cursor-pointer !bg-white/5 border-white/10 group"
@@ -90,19 +69,12 @@ export default function NetworkVisualizerPage() {
     const { assessmentData } = useAssessment();
     const [nodes, setNodes, onNodesChange] = useNodesState([]);
     const [edges, setEdges, onEdgesChange] = useEdgesState([]);
-
-    // Icon mapping dictionary
-    const functionIcons = {
-        'Govern': Crosshair,
-        'Identify': Fingerprint,
-        'Protect': ShieldCheck,
-        'Detect': ActivitySquare,
-        'Respond': Siren,
-        'Recover': ServerCrash
-    };
+    const [isLoading, setIsLoading] = React.useState(true);
 
     useEffect(() => {
         if (!assessmentData || !assessmentData.functions) return;
+
+        setIsLoading(true);
 
         const initialNodes = [];
         const initialEdges = [];
@@ -135,8 +107,7 @@ export default function NetworkVisualizerPage() {
                     label: funcName,
                     type: 'Core Function',
                     color: funcColor,
-                    route: funcUrl,
-                    icon: functionIcons[funcName] || Activity
+                    route: funcUrl
                 },
                 position: { x: 0, y: 0 }
             });
@@ -184,15 +155,22 @@ export default function NetworkVisualizerPage() {
             }
         });
 
-        // Auto Layout with Dagre
-        const { nodes: layoutedNodes, edges: layoutedEdges } = getLayoutedElements(
-            initialNodes,
-            initialEdges,
-            'LR'
-        );
+        // Auto Layout with Web Worker
+        const worker = new Worker(new URL('../workers/layoutWorker.js', import.meta.url), { type: 'module' });
 
-        setNodes([...layoutedNodes]);
-        setEdges([...layoutedEdges]);
+        worker.postMessage({ nodes: initialNodes, edges: initialEdges, direction: 'LR' });
+
+        worker.onmessage = (e) => {
+            const { nodes: layoutedNodes, edges: layoutedEdges } = e.data;
+            setNodes([...layoutedNodes]);
+            setEdges([...layoutedEdges]);
+            setIsLoading(false);
+            worker.terminate();
+        };
+
+        return () => {
+            worker.terminate();
+        };
     }, [assessmentData, projectId, setNodes, setEdges]); // eslint-disable-line react-hooks/exhaustive-deps
 
     const onNodeClick = useCallback((event, node) => {
@@ -214,6 +192,16 @@ export default function NetworkVisualizerPage() {
 
             <div className="flex-1 glass-pro relative overflow-hidden group border-white/5 shadow-inner p-1">
                 <div className="absolute inset-0 bg-gradient-to-br from-nist-primary/5 to-transparent pointer-events-none" />
+                
+                {isLoading && (
+                    <div className="absolute inset-0 bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center">
+                        <div className="flex flex-col items-center gap-3">
+                            <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-nist-primary"></div>
+                            <span className="text-xs font-bold text-slate-500 uppercase tracking-widest">Layouting Architecture...</span>
+                        </div>
+                    </div>
+                )}
+
                 <ReactFlow
                     nodes={nodes}
                     edges={edges}

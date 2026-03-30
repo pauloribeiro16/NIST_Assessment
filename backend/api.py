@@ -29,6 +29,7 @@ def load_env_manually():
                     os.environ[key] = value
 
 load_env_manually()
+import sqlite3
 
 
 from MultiLLM import get_valid_models, MODEL_SCORES, run_phase_a_step, run_debate_round_step, run_final_consensus, CouncilLogger, LOG_DIR_NAME
@@ -52,15 +53,64 @@ BLACKLIST_DB = set()
 # MOCK USER DATABASE (Securely initialized from .env)
 _admin_password = os.getenv("ADMIN_PASSWORD", "Temporary_Admin_ChangeMe_2026!")
 
-USERS_DB = {
+# --- SQLite Configuration & Initialization ---
+DATABASE_PATH = "users.db"
 
-    "admin": {
-        "username": "admin",
-        "full_name": "System Administrator",
-        "hashed_password": pwd_context.hash(_admin_password),
-        "disabled": False,
-    }
-}
+def init_db():
+    conn = sqlite3.connect(DATABASE_PATH)
+    cursor = conn.cursor()
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS users (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            username TEXT UNIQUE NOT NULL,
+            hashed_password TEXT NOT NULL,
+            full_name TEXT,
+            email TEXT,
+            role TEXT DEFAULT 'user'
+        )
+    """)
+    # Insert default admin if not exists
+    cursor.execute("SELECT * FROM users WHERE username = 'admin'")
+    if not cursor.fetchone():
+        cursor.execute(
+            "INSERT INTO users (username, hashed_password, full_name, email, role) VALUES (?, ?, ?, ?, ?)",
+            ("admin", pwd_context.hash(_admin_password), "System Administrator", "admin@nist.invalid", "admin")
+        )
+    conn.commit()
+    conn.close()
+
+# Run initialization on startup
+init_db()
+
+def get_user_by_username(username: str):
+    conn = sqlite3.connect(DATABASE_PATH)
+    cursor = conn.cursor()
+    cursor.execute("SELECT username, hashed_password, full_name, email, role FROM users WHERE username = ?", (username,))
+    row = cursor.fetchone()
+    conn.close()
+    if row:
+        return {
+            "username": row[0],
+            "hashed_password": row[1],
+            "full_name": row[2],
+            "email": row[3],
+            "role": row[4]
+        }
+    return None
+
+def update_user_profile(username: str, full_name: str, email: str):
+    conn = sqlite3.connect(DATABASE_PATH)
+    cursor = conn.cursor()
+    cursor.execute("UPDATE users SET full_name = ?, email = ? WHERE username = ?", (full_name, email, username))
+    conn.commit()
+    conn.close()
+
+def update_user_password(username: str, new_hashed_password: str):
+    conn = sqlite3.connect(DATABASE_PATH)
+    cursor = conn.cursor()
+    cursor.execute("UPDATE users SET hashed_password = ? WHERE username = ?", (new_hashed_password, username))
+    conn.commit()
+    conn.close()
 
 
 def verify_password(plain_password, hashed_password):
@@ -76,9 +126,30 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
     encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
     return encoded_jwt
 
-async def get_current_user(token: Optional[str] = None):
-    # AUTH DISABLED: Always return admin user (Phase 10 Redesign)
-    return USERS_DB["admin"]
+async def get_current_user(token: str = Depends(oauth2_scheme)):
+    credentials_exception = HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Could not validate credentials",
+        headers={"WWW-Authenticate": "Bearer"},
+    )
+    if token in BLACKLIST_DB:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Token has been blacklisted",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        username: str = payload.get("sub")
+        if username is None:
+            raise credentials_exception
+    except JWTError:
+        raise credentials_exception
+        
+    user = get_user_by_username(username)
+    if user is None:
+        raise credentials_exception
+    return user
 
 app = FastAPI()
 
@@ -95,7 +166,9 @@ app.add_middleware(
         "http://localhost:3001", 
         "http://localhost:3002", 
         "http://127.0.0.1:3001", 
-        "http://127.0.0.1:3002"
+        "http://127.0.0.1:3002",
+        "http://localhost:3003",
+        "http://127.0.0.1:3003"
     ],
     allow_credentials=True,
     allow_methods=["*"],
@@ -183,7 +256,7 @@ def get_ollama_status():
 @app.post("/api/token")
 @limiter.limit("10/minute") # Brute Force Protection (V2.1.1)
 async def login_for_access_token(request: Request, form_data: OAuth2PasswordRequestForm = Depends()):
-    user = USERS_DB.get(form_data.username)
+    user = get_user_by_username(form_data.username)
     if not user or not verify_password(form_data.password, user["hashed_password"]):
         # Security: Generic message to prevent account enumeration
         logger.warning(sanitize_log(f"Failed login attempt for username: {form_data.username}"))
@@ -208,7 +281,132 @@ async def logout(token: str = Depends(oauth2_scheme)):
 
 @app.get("/api/auth/me")
 async def read_users_me(current_user: dict = Depends(get_current_user)):
-    return {"username": current_user["username"], "full_name": current_user["full_name"]}
+    return {
+        "username": current_user["username"], 
+        "full_name": current_user.get("full_name", ""), 
+        "email": current_user.get("email", ""), 
+        "role": current_user.get("role", "user")
+    }
+
+# --- Multi-User Management & Profile Endpoints ---
+class UserCreate(BaseModel):
+    username: str
+    password: str
+    full_name: str = ""
+    email: str = ""
+    role: str = "user"
+
+class UserUpdateProfile(BaseModel):
+    full_name: str = ""
+    email: str = ""
+
+class UserUpdatePassword(BaseModel):
+    current_password: str
+    new_password: str
+
+def validate_password_strength(password: str) -> bool:
+    # ASVS 4.0: Minimum 12 chars, 1 uppercase, 1 digit
+    import re
+    if len(password) < 12: return False
+    if not re.search(r"[A-Z]", password): return False
+    if not re.search(r"\d", password): return False
+    return True
+
+@app.post("/api/auth/register")
+@limiter.limit("5/minute")
+async def register_user(request: Request, user_data: UserCreate):
+    """Public endpoint to register a new user with base 'user' role."""
+    # Force role to 'user' for public registration
+    user_data.role = "user"
+    
+    if not user_data.username or not user_data.password:
+        raise HTTPException(status_code=400, detail="Username and password are required")
+        
+    if not validate_password_strength(user_data.password):
+        raise HTTPException(status_code=400, detail="Password deve ter no mínimo 12 caracteres, 1 Letra Maiúscula e 1 Número.")
+        
+    try:
+        conn = sqlite3.connect("users.db")
+        cursor = conn.cursor()
+        hashed_password = pwd_context.hash(user_data.password)
+        cursor.execute('''
+            INSERT INTO users (username, hashed_password, full_name, email, role)
+            VALUES (?, ?, ?, ?, ?)
+        ''', (user_data.username, hashed_password, user_data.full_name, user_data.email, user_data.role))
+        conn.commit()
+    except sqlite3.IntegrityError:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Username already exists")
+    finally:
+        conn.close()
+        
+    logger.info(sanitize_log(f"New user registered: {user_data.username}"))
+    return {"status": "success", "message": "User registered successfully"}
+
+
+@app.get("/api/users")
+def list_users(current_user: dict = Depends(get_current_user)):
+    """List all registered users (Admin Only)."""
+    if current_user.get("role") != "admin":
+        raise HTTPException(status_code=403, detail="Apenas Administradores podem listar utilizadores")
+    conn = sqlite3.connect(DATABASE_PATH)
+    cursor = conn.cursor()
+    cursor.execute("SELECT username, full_name, email, role FROM users")
+    rows = cursor.fetchall()
+    conn.close()
+    return [{"username": r[0], "full_name": r[1], "email": r[2], "role": r[3]} for r in rows]
+
+@app.post("/api/users")
+def create_user(req: UserCreate, current_user: dict = Depends(get_current_user)):
+    """Create a new user into the system (Admin Only)."""
+    if current_user.get("role") != "admin":
+        raise HTTPException(status_code=403, detail="Apenas Administradores podem criar utilizadores")
+    if not validate_password_strength(req.password):
+        raise HTTPException(status_code=400, detail="Password deve ter no mínimo 12 caracteres, 1 Letra Maiúscula e 1 Número.")
+    
+    conn = sqlite3.connect(DATABASE_PATH)
+    cursor = conn.cursor()
+    try:
+        cursor.execute(
+            "INSERT INTO users (username, hashed_password, full_name, email, role) VALUES (?, ?, ?, ?, ?)",
+            (req.username, pwd_context.hash(req.password), req.full_name, req.email, req.role)
+        )
+        conn.commit()
+    except sqlite3.IntegrityError:
+        conn.close()
+        raise HTTPException(status_code=400, detail="Username já em uso")
+    finally:
+        conn.close()
+    return {"status": "User created successfully"}
+
+@app.put("/api/users/{username}/profile")
+def edit_profile(username: str, req: UserUpdateProfile, current_user: dict = Depends(get_current_user)):
+    """Update profile details (Self or Admin Only)."""
+    if current_user["username"] != username and current_user.get("role") != "admin":
+        raise HTTPException(status_code=403, detail="Não autorizado a alterar este perfil")
+    update_user_profile(username, req.full_name, req.email)
+    return {"status": "Perfil atualizado com sucesso"}
+
+@app.put("/api/users/{username}/password")
+def edit_password(username: str, req: UserUpdatePassword, current_user: dict = Depends(get_current_user)):
+    """Change user password (Self or Admin Only)."""
+    if current_user["username"] != username and current_user.get("role") != "admin":
+        raise HTTPException(status_code=403, detail="Não autorizado")
+    
+    # Verify current password if user is editing themselves
+    if current_user["username"] == username:
+        conn = sqlite3.connect(DATABASE_PATH)
+        cursor = conn.cursor()
+        cursor.execute("SELECT hashed_password FROM users WHERE username = ?", (username,))
+        row = cursor.fetchone()
+        conn.close()
+        if not row or not verify_password(req.current_password, row[0]):
+            raise HTTPException(status_code=400, detail="Password atual incorreta")
+            
+    if not validate_password_strength(req.new_password):
+        raise HTTPException(status_code=400, detail="Nova password deve ter no mínimo 12 caracteres, 1 Letra Maiúscula e 1 Número")
+        
+    update_user_password(username, pwd_context.hash(req.new_password))
+    return {"status": "Password atualizada com sucesso"}
 
 @app.post("/api/ollama/start")
 def start_ollama(current_user: dict = Depends(get_current_user)):

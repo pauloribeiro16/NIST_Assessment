@@ -3,7 +3,9 @@ import { useNavigate } from 'react-router-dom';
 import { Building2, Plus, ArrowRight, Trash2, Shield } from 'lucide-react';
 import { useAssessment } from '../context/AssessmentContext';
 
-const API_BASE = `${window.location.protocol}//${window.location.hostname}:5001`;
+const API_BASE = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
+    ? 'http://127.0.0.1:5001'
+    : window.location.origin;
 
 export default function ProjectSelectionPage() {
     const [projects, setProjects] = useState([]);
@@ -12,18 +14,30 @@ export default function ProjectSelectionPage() {
     const navigate = useNavigate();
     const { authState } = useAssessment();
 
+    const [error, setError] = useState(null);
+
     useEffect(() => {
         fetchProjects();
     }, []);
 
     const fetchProjects = async () => {
+        setError(null);
         try {
             const headers = authState.token ? { 'Authorization': `Bearer ${authState.token}` } : {};
             const res = await fetch(`${API_BASE}/api/projects`, { headers });
+            if (res.status === 401) {
+                navigate('/login');
+                return;
+            }
+            if (!res.ok) {
+                setError(`Erro do servidor: ${res.status} ${res.statusText}`);
+                return;
+            }
             const data = await res.json();
             setProjects(data.projects || []);
         } catch (e) {
             console.error(e);
+            setError('Não foi possível ligar ao servidor. Verifique se o backend está ativo.');
         }
     };
 
@@ -82,7 +96,7 @@ export default function ProjectSelectionPage() {
             </div>
 
             <div className="flex flex-col items-center mb-16 text-center relative z-10 animate-in">
-                <div className="w-16 h-16 rounded-2xl glass-pro flex items-center justify-center mb-6">
+                <div className="w-16 h-16 rounded-2xl bg-white border-2 border-slate-900 shadow-[4px_4px_0px_0px_rgba(15,23,42,1)] flex items-center justify-center mb-6">
 
                     <Shield className="w-8 h-8 text-text-title" />
                 </div>
@@ -93,6 +107,11 @@ export default function ProjectSelectionPage() {
             </div>
 
             <div className="w-full max-w-5xl relative z-10">
+                {error && (
+                    <div className="mb-6 px-6 py-4 bg-red-50 border-2 border-red-500 rounded-2xl text-red-700 text-sm font-semibold shadow-[4px_4px_0px_0px_rgba(220,38,38,1)]">
+                        ⚠️ {error}
+                    </div>
+                )}
                 <div className="flex justify-between items-end mb-10 px-2 animate-in delay-100">
                     <div>
                         <h2 className="text-2xl font-display font-bold text-text-title">Select Assessment Project</h2>
@@ -100,7 +119,7 @@ export default function ProjectSelectionPage() {
                     </div>
                     <button
                         onClick={() => setIsCreating(true)}
-                        className="bg-nist-primary hover:bg-blue-500 text-white px-6 py-3 rounded-2xl text-xs font-bold flex items-center gap-2 transition-all shadow-[0_0_20px_rgba(37,99,235,0.2)] hover:shadow-[0_0_30px_rgba(37,99,235,0.4)] active:scale-95 group"
+                        className="bg-nist-primary text-white px-6 py-3 rounded-2xl border-2 border-slate-900 text-xs font-bold flex items-center gap-2 transition-transform shadow-[4px_4px_0px_0px_rgba(15,23,42,1)] hover:translate-y-[-2px] hover:shadow-[6px_6px_0px_0px_rgba(15,23,42,1)] active:scale-95 group"
                     >
                         <Plus className="w-4 h-4 group-hover:rotate-90 transition-transform" /> 
                         <span className="tracking-widest uppercase">New Assessment</span>
@@ -108,10 +127,9 @@ export default function ProjectSelectionPage() {
                 </div>
 
                 {isCreating && (
-                    <div className="glass-pro p-10 mb-12 animate-in overflow-hidden relative">
-
-                        <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-nist-primary to-transparent opacity-50"></div>
-                        <h3 className="text-xs font-bold text-text-dim uppercase tracking-[0.2em] mb-6">Initialize New Project</h3>
+                        <div className="bg-white border-2 border-slate-900 shadow-[6px_6px_0px_0px_rgba(15,23,42,1)] rounded-2xl p-10 mb-12 animate-in overflow-hidden relative">
+                        <div className="absolute top-0 left-0 w-full h-2 bg-nist-primary border-b-2 border-slate-900"></div>
+                        <h3 className="text-xs font-black text-slate-900 uppercase tracking-[0.2em] mb-6 mt-2">Initialize New Project</h3>
                         <form onSubmit={handleCreateProject} className="flex flex-col md:flex-row gap-4">
                             <input
                                 autoFocus
@@ -146,7 +164,7 @@ export default function ProjectSelectionPage() {
                         <div
                             key={p.id}
                             onClick={() => selectProject(p.id)}
-                            className="glass-pro p-8 group flex flex-col gap-8 transition-all duration-500 hover:translate-y-[-4px] animate-in relative cursor-pointer"
+                            className="bg-white border-2 border-slate-900 shadow-[6px_6px_0px_0px_rgba(15,23,42,1)] rounded-2xl p-8 group flex flex-col gap-8 transition-all duration-300 hover:translate-y-[-4px] hover:shadow-[8px_8px_0px_0px_rgba(15,23,42,1)] animate-in relative cursor-pointer"
                             style={{ animationDelay: `${idx * 50}ms` }}
                         >
                             {/* Decorative Accent */}
@@ -199,16 +217,15 @@ export default function ProjectSelectionPage() {
                         </div>
                     ))}
                     {projects.length === 0 && !isCreating && (
-                        <div className="col-span-full py-24 glass-pro border-dashed flex flex-col items-center animate-in">
-                            <div className="w-20 h-20 rounded-full bg-slate-50 flex items-center justify-center mb-6">
-
-                                <Building2 className="w-10 h-10 text-text-dim opacity-40" />
+                        <div className="col-span-full py-24 bg-slate-50 border-4 border-dashed border-slate-300 rounded-3xl flex flex-col items-center animate-in">
+                            <div className="w-20 h-20 rounded-full bg-slate-200 flex items-center justify-center mb-6">
+                                <Building2 className="w-10 h-10 text-slate-400" />
                             </div>
                             <h3 className="text-xl font-display font-bold mb-2 text-text-title">No Assessments Found</h3>
                             <p className="text-text-dim text-sm font-medium mb-8 max-w-xs text-center opacity-70">Initialize your first strategic company baseline to begin compliance orchestration.</p>
                             <button
                                 onClick={() => setIsCreating(true)}
-                                className="bg-nist-primary hover:bg-blue-500 text-white px-8 py-4 rounded-2xl text-xs font-bold transition-all inline-flex items-center gap-2 shadow-lg"
+                                className="bg-nist-primary text-white border-2 border-slate-900 px-8 py-4 rounded-2xl text-xs font-black uppercase tracking-widest transition-transform shadow-[4px_4px_0px_0px_rgba(15,23,42,1)] hover:translate-y-[-2px] hover:shadow-[6px_6px_0px_0px_rgba(15,23,42,1)] inline-flex items-center gap-2"
                             >
                                 <Plus className="w-4 h-4" /> 
                                 <span className="tracking-widest uppercase">Start First Assessment</span>

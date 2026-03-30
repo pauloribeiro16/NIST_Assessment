@@ -35,8 +35,8 @@ export default function FunctionPage() {
     if (!data) {
         return (
             <div className="flex flex-col items-center justify-center h-full text-center animate-in">
-                <div className="w-20 h-20 rounded-2xl glass-pro flex items-center justify-center mb-6 glow-accent">
-                    <Info className="w-10 h-10 text-text-dim" />
+                <div className="w-20 h-20 rounded-2xl bg-white border-2 border-slate-900 shadow-[4px_4px_0px_0px_rgba(15,23,42,1)] flex items-center justify-center mb-6">
+                    <Info className="w-10 h-10 text-slate-800" />
                 </div>
                 <h2 className="text-3xl font-display font-bold mb-3 tracking-tight text-text-title">{functionName || 'Functional Entity Not Found'}</h2>
                 <p className="text-text-dim max-w-md mx-auto leading-relaxed">The requested NIST CSF 2.0 functional domain is either uninitialized or outside the current assessment scope.</p>
@@ -70,10 +70,10 @@ export default function FunctionPage() {
             {
                 label: 'Category Maturity',
                 data: categoryScores,
-                backgroundColor: functionColor + '99',
-                borderColor: functionColor,
-                borderWidth: 1,
-                borderRadius: 8
+                backgroundColor: functionColor,
+                borderColor: '#0f172a',
+                borderWidth: 2,
+                borderRadius: 6
             }
         ]
     };
@@ -86,12 +86,14 @@ export default function FunctionPage() {
                 beginAtZero: true,
                 min: 0,
                 max: 4,
-                ticks: { stepSize: 1, color: '#64748b', font: { size: 10, family: 'Inter', weight: '600' } },
-                grid: { color: 'rgba(255, 255, 255, 0.05)' }
+                ticks: { stepSize: 1, color: '#0f172a', font: { size: 10, family: 'Inter', weight: '800' } },
+                grid: { color: 'rgba(15, 23, 42, 0.12)' },
+                border: { color: '#0f172a', width: 2 }
             },
             x: {
-                ticks: { color: '#94a3b8', font: { weight: '700', size: 10, family: 'Outfit' } },
-                grid: { display: false }
+                ticks: { color: '#0f172a', font: { size: 9, weight: '800', family: 'Outfit' } },
+                grid: { display: false },
+                border: { color: '#0f172a', width: 2 }
             }
         },
         plugins: {
@@ -124,9 +126,8 @@ export default function FunctionPage() {
                         </div>
                     </div>
 
-                    <div className="flex flex-col items-end gap-2 px-6 py-4 glass-pro">
-
-                        <span className="text-[10px] font-bold text-text-dim uppercase tracking-[0.2em]">Aggregate Maturity</span>
+                    <div className="flex flex-col items-end gap-2 px-6 py-4 bg-white border-2 border-slate-900 shadow-[4px_4px_0px_0px_rgba(15,23,42,1)] rounded-2xl">
+                        <span className="text-[10px] font-black text-slate-800 uppercase tracking-[0.2em]">Aggregate Maturity</span>
                         <div className="flex items-baseline gap-2">
                             <span className="text-4xl font-display font-bold text-text-title">{(data.score || 0).toFixed(1)}</span>
                             <span className="text-xs font-bold text-text-dim uppercase">/ 4.0</span>
@@ -140,17 +141,17 @@ export default function FunctionPage() {
             </header>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
-                <div className="lg:col-span-2 glass-pro p-8 flex flex-col min-h-[480px] animate-in delay-200">
-                    <div className="flex items-center justify-between mb-10 border-b border-slate-100 pb-6">
+                <div className="lg:col-span-2 bg-white border-2 border-slate-900 shadow-[8px_8px_0px_0px_rgba(15,23,42,1)] p-8 flex flex-col min-h-[480px] rounded-2xl animate-in delay-200">
+                    <div className="flex items-center justify-between mb-10 border-b-2 border-slate-900 pb-6">
 
                         <div className="flex flex-col gap-1">
                             <h3 className="text-xs font-bold uppercase tracking-[0.2em] text-text-title">Category Distribution</h3>
                             <p className="text-[10px] text-text-dim font-medium italic">Relative maturity density across {categoryLabels.length} categories</p>
                         </div>
-                        <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-50 border border-slate-200">
+                        <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-white border-2 border-slate-900 shadow-[2px_2px_0px_0px_rgba(15,23,42,1)]">
 
                             <Activity className="w-3.5 h-3.5 text-nist-primary" />
-                            <span className="text-[10px] font-extrabold text-text-dim tracking-widest uppercase">Benchmark Analysis</span>
+                            <span className="text-[10px] font-extrabold text-slate-900 tracking-widest uppercase">Benchmark Analysis</span>
                         </div>
                     </div>
                     <div className="flex-1 w-full relative">
@@ -165,11 +166,11 @@ export default function FunctionPage() {
                             <Link
                                 key={cat}
                                 to={`/project/${projectId}/category/${funcId}/${cat.toLowerCase().replace(/\s+/g, '-')}`}
-                                className="flex items-center justify-between p-5 rounded-2xl glass-pro hover:border-nist-primary/30 transition-all group"
-                                style={{
+                                 className="flex items-center justify-between p-5 rounded-2xl bg-white border-2 border-slate-900 shadow-[3px_3px_0px_0px_rgba(15,23,42,1)] hover:shadow-[5px_5px_0px_0px_rgba(15,23,42,1)] hover:-translate-y-1 transition-all group"
+                                 style={{
                                     borderLeft: `4px solid ${functionColor}`
-                                }}
-                            >
+                                 }}
+                             >
                                 <div className="flex flex-col gap-1 min-w-0">
                                     <span
                                         className="font-display font-bold text-sm tracking-tight text-text-title truncate group-hover:text-nist-primary transition-colors pr-2"

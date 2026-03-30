@@ -101,14 +101,14 @@ export default function RoadmapPage() {
     if (actionPlan.length === 0) {
         return (
             <div className="flex flex-col items-center justify-center h-[500px] text-center animate-in px-4">
-                <div className="w-20 h-20 rounded-2xl glass-pro flex items-center justify-center mb-6 glow-accent">
-                    <Calendar className="w-10 h-10 text-nist-primary" />
+                <div className="w-20 h-20 rounded-2xl bg-white border-4 border-slate-900 shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] flex items-center justify-center mb-6">
+                    <Calendar className="w-10 h-10 text-slate-900" />
                 </div>
-                <h2 className="text-2xl font-display font-bold mb-3 tracking-tight text-text-title">Empty Implementation Roadmap</h2>
-                <p className="text-text-dim max-w-md mx-auto leading-relaxed text-sm mb-6">
-                    You haven't added any controls to your roadmap yet. Go to your active projects categories and use the <Plus className="inline w-3.5 h-3.5 mx-1" /> button to trigger scheduling.
+                <h2 className="text-3xl font-black uppercase tracking-tight text-slate-900 mb-3">Empty Implementation Roadmap</h2>
+                <p className="text-slate-600 font-bold max-w-md mx-auto leading-relaxed text-sm mb-8">
+                    You haven't added any controls to your roadmap yet. Go to your active projects categories and use the <Plus className="inline w-4 h-4 mx-1 bg-slate-900 text-white rounded-sm" /> button to trigger scheduling.
                 </p>
-                <Link to={`/project/${projectId}`} className="px-6 py-3 rounded-xl bg-nist-primary/10 text-nist-primary text-xs font-bold hover:bg-nist-primary/20 transition-all border border-nist-primary/20 uppercase tracking-widest">
+                <Link to={`/project/${projectId}`} className="px-8 py-4 bg-white text-slate-900 border-2 border-slate-900 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] hover:-translate-y-1 text-xs font-black uppercase tracking-[0.2em] transition-all">
                     Back to Assessment
                 </Link>
             </div>
@@ -123,7 +123,7 @@ export default function RoadmapPage() {
                         <Activity className="w-10 h-10 text-nist-primary" />
                         Implementation Strategy
                     </h2>
-                    <p className="text-text-dim text-sm max-w-2xl leading-relaxed italic border-l-2 border-nist-primary pl-4">
+                    <p className="text-slate-600 font-bold text-sm max-w-2xl leading-relaxed italic border-l-4 border-slate-900 pl-4">
                         Dynamic scheduling and customization suite. Reshape Guidance frameworks into actionable intervals supporting institutional security priorities.
                     </p>
                 </div>
@@ -133,7 +133,7 @@ export default function RoadmapPage() {
             <div className="flex flex-wrap gap-2 pb-2">
                 {FUNCTIONS.map(fn => {
                     const colorMap = {
-                        All: '#6b7280', Govern: '#FFB300', Identify: '#4FB6E1',
+                        All: '#64748b', Govern: '#FFB300', Identify: '#4FB6E1',
                         Protect: '#9186E1', Detect: '#FFB347', Respond: '#EB7979', Recover: '#82EEA2'
                     };
                     const color = colorMap[fn];
@@ -143,15 +143,15 @@ export default function RoadmapPage() {
                         <button
                             key={fn}
                             onClick={() => setActiveFilter(fn)}
-                            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[10px] font-bold uppercase tracking-widest transition-all border cursor-pointer ${
+                            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all border-2 cursor-pointer ${
                                 isActive
-                                    ? 'text-white border-transparent shadow-md'
-                                    : 'text-text-dim border-white/10 hover:border-white/20 bg-white/5'
+                                    ? 'text-white border-slate-900 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]'
+                                    : 'text-slate-900 border-slate-900 bg-white hover:bg-slate-50 hover:translate-y-[-1px] hover:shadow-[1px_1px_0px_0px_rgba(0,0,0,1)]'
                             }`}
-                            style={isActive ? { backgroundColor: color, boxShadow: `0 0 12px ${color}40` } : {}}
+                            style={isActive ? { backgroundColor: color, boxShadow: '2px 2px 0px 0px rgba(0,0,0,1)' } : {}}
                         >
                             {fn}
-                            <span className={`px-1.5 py-0.5 rounded-full text-[9px] font-bold ${isActive ? 'bg-white/20' : 'bg-white/10'}`}>
+                            <span className={`px-1.5 py-0.5 rounded-full text-[9px] font-bold ${isActive ? 'bg-white/20' : 'bg-slate-100 text-slate-600'}`}>
                                 {count}
                             </span>
                         </button>
@@ -163,21 +163,21 @@ export default function RoadmapPage() {
                 {/* 🔧 Panel 1: Settings & Cards */}
                 <div className="flex flex-col gap-5 overflow-y-auto max-h-[700px] pr-2 hidden-scrollbar">
                     <div className="flex flex-col gap-1 mb-2">
-                        <h3 className="text-xs font-bold uppercase tracking-[0.2em] text-text-title">Configuration Board</h3>
-                        <p className="text-[10px] text-text-dim/60 italic">Customize targets and guidance details</p>
+                        <h3 className="text-xs font-black uppercase tracking-[0.1em] text-slate-900 border-b-2 border-slate-900 pb-1 w-max">Configuration Board</h3>
+                        <p className="text-[10px] text-slate-500 font-extrabold">Customize targets and guidance details</p>
                     </div>
                     {filteredPlan.map(item => {
                         const meta = getFuncMeta(item.id);
                         return (
-                            <div key={item.id} className="p-5 rounded-2xl bg-white/5 border border-white/10 flex flex-col gap-4 relative group transition-all hover:bg-white/10">
+                            <div key={item.id} className="p-5 rounded-2xl bg-white border-2 border-slate-900 flex flex-col gap-4 relative group transition-all shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
                                 <div className="flex items-center justify-between gap-4">
                                     <div className="flex flex-col min-w-0">
-                                        <span className="text-[8px] font-bold font-mono tracking-widest uppercase mb-1" style={{ color: meta.color }}>{item.id} • {meta.name}</span>
-                                        <span className="text-xs font-display font-bold text-text-title tracking-tight truncate">{item.name}</span>
+                                        <span className="text-[9px] font-extrabold font-mono tracking-widest uppercase mb-1" style={{ color: meta.color }}>{item.id} • {meta.name}</span>
+                                        <span className="text-xs font-display font-bold text-slate-800 tracking-tight truncate">{item.name}</span>
                                     </div>
                                     <button 
                                         onClick={() => handleRemoveItem(item.id)}
-                                        className="text-text-dim hover:text-nist-danger transition-colors p-1"
+                                        className="text-slate-400 hover:text-red-500 transition-colors p-1"
                                         title="Remover"
                                     >
                                         <Trash2 className="w-4 h-4" />
@@ -185,30 +185,30 @@ export default function RoadmapPage() {
                                 </div>
                                 <div className="grid grid-cols-2 gap-4">
                                     <div className="flex flex-col gap-1">
-                                        <label className="text-[8px] font-bold uppercase tracking-widest text-text-dim">Start Date</label>
+                                        <label className="text-[8px] font-bold uppercase tracking-widest text-slate-500">Start Date</label>
                                         <input 
                                             type="date" 
                                             value={item.startDate || ''} 
                                             onChange={(e) => handleUpdateItem(item.id, 'startDate', e.target.value)}
-                                            className="bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-xs text-text-title outline-none focus:border-nist-primary/50"
+                                            className="bg-slate-50 border-2 border-slate-900 rounded-xl px-3 py-2 text-xs text-slate-900 font-bold outline-none focus:bg-white transition-all shadow-[1px_1px_0px_0px_rgba(0,0,0,1)]"
                                         />
                                     </div>
                                     <div className="flex flex-col gap-1">
-                                        <label className="text-[8px] font-bold uppercase tracking-widest text-text-dim">End Date</label>
+                                        <label className="text-[8px] font-bold uppercase tracking-widest text-slate-500">End Date</label>
                                         <input 
                                             type="date" 
                                             value={item.endDate || ''} 
                                             onChange={(e) => handleUpdateItem(item.id, 'endDate', e.target.value)}
-                                            className="bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-xs text-text-title outline-none focus:border-nist-primary/50"
+                                            className="bg-slate-50 border-2 border-slate-900 rounded-xl px-3 py-2 text-xs text-slate-900 font-bold outline-none focus:bg-white transition-all shadow-[1px_1px_0px_0px_rgba(0,0,0,1)]"
                                         />
                                     </div>
                                 </div>
                                 <div className="flex flex-col gap-1">
-                                    <label className="text-[8px] font-bold uppercase tracking-widest text-text-dim">Notes / Guidance</label>
+                                    <label className="text-[8px] font-bold uppercase tracking-widest text-slate-500">Notes / Guidance</label>
                                     <textarea 
                                         value={item.customGuidance || ''} 
                                         onChange={(e) => handleUpdateItem(item.id, 'customGuidance', e.target.value)}
-                                        className="bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-[10px] text-text-body resize-y min-h-[60px] outline-none focus:border-nist-primary/50 leading-relaxed"
+                                        className="bg-slate-50 border-2 border-slate-900 rounded-xl px-3 py-2 text-[10px] text-slate-900 font-medium resize-y min-h-[60px] outline-none focus:bg-white leading-relaxed shadow-[1px_1px_0px_0px_rgba(0,0,0,1)]"
                                         placeholder="Add descriptive guidance notes..."
                                     />
                                 </div>
@@ -216,18 +216,18 @@ export default function RoadmapPage() {
                         );
                     })}
                     {filteredPlan.length === 0 && (
-                        <div className="py-12 text-center text-text-dim text-[11px] opacity-50 bg-white/3 border border-dashed border-white/10 rounded-2xl">
+                        <div className="py-12 text-center text-slate-400 text-[11px] bg-slate-50/50 border border-dashed border-slate-200 rounded-2xl">
                             No items scheduled for {activeFilter}
                         </div>
                     )}
                 </div>
 
                 {/* 📊 Panel 2: Gantt Chart View */}
-                <div className="xl:col-span-2 glass-pro p-6 flex flex-col gap-5 min-h-[500px] overflow-x-auto shadow-inner relative">
-                    <div className="flex items-center justify-between mb-4">
+                <div className="xl:col-span-2 bg-white border-2 border-slate-900 shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] rounded-2xl p-6 flex flex-col gap-5 min-h-[500px] overflow-x-auto relative">
+                    <div className="flex items-center justify-between mb-4 border-b-2 border-slate-900 pb-4">
                         <div className="flex flex-col gap-1">
-                            <h3 className="text-xs font-bold uppercase tracking-[0.2em] text-text-title">Visual Allocation timeline</h3>
-                            <p className="text-[10px] text-text-dim/60 italic">Interactive Interval Spanning</p>
+                            <h3 className="text-xs font-black uppercase tracking-[0.2em] text-slate-900">Visual Allocation Timeline</h3>
+                            <p className="text-[10px] text-slate-500 font-extrabold uppercase tracking-wider">Interactive Interval Spanning</p>
                         </div>
                     </div>
 
@@ -235,9 +235,9 @@ export default function RoadmapPage() {
                         {/* Headers with offset wrapper */}
                         <div className="flex">
                             <div className="w-24 shrink-0" /> {/* Sidebar Spacer */}
-                            <div className="flex-1 grid border-b border-black/5 pb-3 mb-4" style={{ gridTemplateColumns: `repeat(${months.length}, 1fr)` }}>
+                            <div className="flex-1 grid border-b-2 border-slate-800 pb-3 mb-4" style={{ gridTemplateColumns: `repeat(${months.length}, 1fr)` }}>
                                 {months.map((m, idx) => (
-                                    <div key={idx} className="text-center text-[9px] font-bold text-text-dim uppercase tracking-wider border-r border-dashed border-slate-300 last:border-0">
+                                    <div key={idx} className="text-center text-[10px] font-black text-slate-900 uppercase tracking-widest border-r-2 border-slate-800/20 last:border-0">
                                         {m.label}
                                     </div>
                                 ))}
@@ -246,22 +246,22 @@ export default function RoadmapPage() {
 
                         {/* Chart Body */}
                         <div className="flex-1 flex flex-col gap-4 relative">
-                            {Object.entries(groupedPlan).map(([funcName, items]) => (
+                            {Object.entries(groupedPlan).map(([funcName, items], idx) => (
                                 items.length > 0 && (
-                                    <div key={funcName} className="flex border-b border-dashed border-slate-200/40 last:border-0 min-h-[44px]">
+                                    <div key={funcName} className={`flex border-b-2 border-slate-300 last:border-0 min-h-[48px] ${idx % 2 === 0 ? 'bg-white' : 'bg-slate-50'}`}>
                                         {/* Sticky Left Sidebar Column */}
-                                        <div className="w-24 shrink-0 flex items-center justify-center border-r border-slate-200 bg-slate-50/10 sticky left-0 z-20 backdrop-blur-sm">
-                                            <span className="font-bold text-[10px] uppercase tracking-wider" style={{ color: getFuncMeta(items[0].id).color }}>
+                                        <div className="w-24 shrink-0 flex items-center justify-center border-r-2 border-slate-900 bg-white sticky left-0 z-20">
+                                            <span className="font-black text-[11px] uppercase tracking-wider" style={{ color: getFuncMeta(items[0].id).color }}>
                                                 {funcName === 'Govern' ? 'GV' : funcName.substring(0, 2).toUpperCase()}
                                             </span>
                                         </div>
                                         
                                         {/* Right Chart Canvas */}
-                                        <div className="flex-1 flex flex-col gap-2 p-2 relative">
+                                        <div className="flex-1 flex flex-col gap-2 p-3 relative">
                                             {/* Static vertical Grid Lines */}
                                             <div className="absolute inset-0 grid" style={{ gridTemplateColumns: `repeat(${months.length}, 1fr)` }}>
                                                 {months.map((_, idx) => (
-                                                    <div key={idx} className="border-r border-dashed border-slate-300/40 h-full last:border-0" />
+                                                    <div key={idx} className="border-r-2 border-dashed border-slate-300 h-full last:border-0" />
                                                 ))}
                                             </div>
 
@@ -271,21 +271,24 @@ export default function RoadmapPage() {
                                                 const startPct = getPercentage(item.startDate);
                                                 const endPct = getPercentage(item.endDate);
                                                 const widthPct = Math.max(2, endPct - startPct);
+                                                const isLightBg = meta.name === 'Govern' || meta.name === 'Recover';
 
                                                 return (
-                                                    <div key={item.id} className="h-10 flex items-center relative group z-10 border-b border-dashed border-slate-200 last:border-0">
+                                                    <div key={item.id} className="h-10 flex items-center relative group z-10">
                                                         <div 
-                                                            className="absolute h-6 rounded-xl flex items-center px-3 shadow-md transition-all group-hover:shadow-lg group-hover:brightness-110 cursor-pointer overflow-hidden border"
+                                                            className="absolute h-8 rounded-lg flex items-center px-3 shadow-[3px_3px_0px_0px_rgba(15,23,42,1)] border-2 border-slate-900 transition-all hover:translate-y-[-1px] hover:shadow-[4px_4px_0px_0px_rgba(15,23,42,1)] cursor-pointer overflow-hidden"
                                                             style={{ 
                                                                 left: `${startPct}%`, 
                                                                 width: `${widthPct}%`,
-                                                                backgroundColor: `${meta.color}15`,
-                                                                borderColor: `${meta.color}30`,
+                                                                backgroundColor: meta.color,
                                                             }}
                                                             title={`${item.id}: ${item.startDate} to ${item.endDate}`}
                                                         >
-                                                            <div className="w-1.5 h-1.5 rounded-full mr-2 flex-shrink-0" style={{ backgroundColor: meta.color }} />
-                                                            <span className="text-[10px] font-bold text-text-title truncate">{item.id}</span>
+                                                            {/* Overlay Depth Gradient for polish */}
+                                                            <div className="absolute inset-0 bg-gradient-to-b from-white/10 to-transparent pointer-events-none" />
+                                                            <span className={`text-[10px] font-extrabold uppercase tracking-wider truncate relative z-10 ${isLightBg ? 'text-slate-900' : 'text-white'}`}>
+                                                                {item.id}
+                                                            </span>
                                                         </div>
                                                     </div>
                                                 );
@@ -297,10 +300,10 @@ export default function RoadmapPage() {
 
                             {filteredPlan.length === 0 && (
                                 <div className="flex flex-col items-center justify-center py-20 text-center relative z-10">
-                                    <div className="text-text-dim text-xs font-bold opacity-50 mb-1">
-                                        No controls for <span className="uppercase">{activeFilter}</span>
+                                    <div className="text-slate-500 text-sm font-black uppercase tracking-widest mb-2">
+                                        No controls for <span className="text-slate-900 border-b-2 border-slate-900">{activeFilter}</span>
                                     </div>
-                                    <p className="text-[10px] text-text-dim/40">
+                                    <p className="text-[10px] items-center text-slate-500 font-bold uppercase tracking-wider">
                                         Adjust filters or execute roadmap assessments
                                     </p>
                                 </div>
